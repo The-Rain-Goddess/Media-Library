@@ -1,11 +1,12 @@
 package com.negativevr.media_library;
 /**
  * 
- * @author Vaneh
+ * @author Vaneh Boghosian
+ * @author Ryan May
  *
  */
 
-public class Main {
+public class Main{
 
 	public Main() {
 		// TODO Auto-generated constructor stub
