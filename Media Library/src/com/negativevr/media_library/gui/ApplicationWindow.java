@@ -1,10 +1,14 @@
 package com.negativevr.media_library.gui;
+import java.util.Arrays;
+import java.util.List;
+
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Control;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -113,41 +117,51 @@ public class ApplicationWindow extends Application{
 		System.out.println("HI");
 		Stage addWindow = new Stage();
 		addWindow.setTitle("ADD Media");
+		GridPane componentLayout = getAddWindowLayout();
+		
+		componentLayout.getChildren().addAll(getWindowComponents());
+		
+		Scene scene = new Scene(componentLayout,400,400);
+		addWindow.setScene(scene);
+		addWindow.show();
+	}
+	
+	private GridPane getAddWindowLayout(){
 		GridPane componentLayout = new GridPane();
 		componentLayout.setPadding(new Insets(10, 10, 10, 10));
 		componentLayout.setVgap(5);
 		componentLayout.setHgap(5);
-		
+		return componentLayout;
+	}
+	
+	private List<Control> getWindowComponents(){
 		//Defining the Name text field
 		final TextField name = new TextField();
 		name.setPromptText("Enter your first name.");
 		name.setPrefColumnCount(10);
 		name.getText();
 		GridPane.setConstraints(name, 0, 0);
-		componentLayout.getChildren().add(name);
-	
+
 		//Defining the Last Name text field
 		final TextField lastName = new TextField();
 		lastName.setPromptText("Enter your last name.");
 		GridPane.setConstraints(lastName, 0, 1);
-		componentLayout.getChildren().add(lastName);
+		
 		//Defining the Comment text field
 		final TextField comment = new TextField();
 		comment.setPrefColumnCount(15);
 		comment.setPromptText("Enter your comment.");
 		GridPane.setConstraints(comment, 0, 2);
-		componentLayout.getChildren().add(comment);
+		
 		//Defining the Submit button
 		Button submit = new Button("Submit");
 		GridPane.setConstraints(submit, 1, 0);
-		componentLayout.getChildren().add(submit);
+		
 		//Defining the Clear button
 		Button clear = new Button("Clear");
 		GridPane.setConstraints(clear, 1, 1);
-		componentLayout.getChildren().add(clear);
-		Scene scene = new Scene(componentLayout,400,400);
-		addWindow.setScene(scene);
-		addWindow.show();
+		
+		return Arrays.asList(name, lastName, comment, submit, clear);
 	}
 	
 	private void showRemoveWindow(){
