@@ -19,7 +19,7 @@ public class MediaFile implements Serializable {
 	private final long UUID;
 
 
-	private List artistName;
+	private List<String> artistName;
 	private String albumName;
 	private int albumNumber;
 	private String dateCreated;
@@ -28,7 +28,7 @@ public class MediaFile implements Serializable {
 	private double songTime;
 	private String filePath;
 	
-	public MediaFile(List artistName, String albumName,int albumNumber, String dateCreated,
+	public MediaFile(List<String> artistName, String albumName,int albumNumber, String dateCreated,
 			String dateRecorded, String songName,double songTime, String filePath, long UUID)
 	{
 		this.artistName= artistName;
