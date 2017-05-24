@@ -148,7 +148,7 @@ public class MediaFile implements Serializable {
 	
 	public void writeToDisk() throws IOException
 	{
-		FileOutputStream f_out= new FileOutputStream(UUID+""+".data");
+		FileOutputStream f_out= new FileOutputStream("c:\\Music\\Artist(s)\\Album\\" + UUID + ".data");
 		ObjectOutputStream obj_out= new ObjectOutputStream(f_out);
 		obj_out.writeObject(this);
 		obj_out.close();
@@ -188,6 +188,8 @@ public class MediaFile implements Serializable {
 		map. put(1214, file2);
 		 
 		System.out.println(map);
+		
+		
 		 
 	}
 	
