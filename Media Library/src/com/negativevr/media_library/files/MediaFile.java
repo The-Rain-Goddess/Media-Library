@@ -252,11 +252,4 @@ public class MediaFile implements Serializable {
 				"\n\nDate Recorded: \n"+dateRecorded.get()+"\n\nSong Name: \n"+ songName.get()
 				+ "\nSong Time: \n"+ songTime.get()+ "\n\nFile Path: \n"+filePath.get();
 	}
-		
-	public static void main(String[] args) {
-		
-	}
-	
-	
-	
 }
