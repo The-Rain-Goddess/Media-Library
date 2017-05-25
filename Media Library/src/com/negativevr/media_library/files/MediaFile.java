@@ -40,7 +40,8 @@ public class MediaFile implements Serializable {
 			StringProperty dateRecorded, 
 			StringProperty songName,
 			DoubleProperty songTime,
-			StringProperty filePath, 
+			StringProperty filePath,
+			StringProperty genre,
 			long UUID)
 	{
 		this.artistName= artistName;
@@ -51,6 +52,7 @@ public class MediaFile implements Serializable {
 		this.songName= songName;
 		this.songTime= songTime;
 		this.filePath= filePath;
+		this.genre = genre;
 		this.UUID= UUID;
 	}
 	
@@ -62,6 +64,7 @@ public class MediaFile implements Serializable {
 			String songName,
 			Double songTime,
 			String filePath, 
+			String genre,
 			long UUID)
 	{
 		this.artistName= convertToProperty(artistName);
@@ -72,6 +75,7 @@ public class MediaFile implements Serializable {
 		this.songName= new SimpleStringProperty(songName);
 		this.songTime= new SimpleDoubleProperty(songTime);
 		this.filePath= new SimpleStringProperty(filePath);
+		this.genre = new SimpleStringProperty(genre);
 		this.UUID= UUID;
 	}
 	
