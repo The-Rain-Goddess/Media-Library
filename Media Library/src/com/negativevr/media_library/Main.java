@@ -29,6 +29,11 @@ public class Main {
 	}
 
 	public static void main(String[] args) {
+		try{
+			readFromFile();
+		} catch(IOException e){
+			
+		}
 		List<String> name= new ArrayList<>();
 		name.add("The Killers");
 		MediaFile file = new MediaFile(name, "Kill", 4, new Date().toString(),
@@ -91,7 +96,7 @@ public class Main {
 	}
 	
 // private accessors/ mutators
-	public static void readToDisk() throws IOException{
+	private static void readToDisk() throws IOException{
 		for(Map.Entry<Long, MediaFile> entry: masterMediaData.entrySet()){
 			MediaFile file=entry.getValue();
 			File dir = new File("C:\\Music\\"+ file.getArtistName().get(0).toLowerCase()+ "\\");
@@ -100,5 +105,9 @@ public class Main {
 		    			+ file.getAlbumName().toLowerCase() + "\\").mkdirs();
 		    file.writeToDisk();
 		}
+	}
+	
+	private static void readFromFile() throws IOException{
+		
 	}
 }
