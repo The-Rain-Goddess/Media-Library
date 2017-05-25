@@ -3,10 +3,17 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
+import com.negativevr.media_library.Main;
+import com.negativevr.media_library.files.MediaFile;
+
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Control;
@@ -14,9 +21,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -24,6 +35,9 @@ import javafx.stage.Stage;
 
 public class ApplicationWindow extends Application{
 
+	private final double WINDOW_MIN_WIDTH = 600;
+	private final double WINDOW_MIN_HEIGHT = 600;
+	
 	public ApplicationWindow() {
 		
 	}
@@ -34,27 +48,109 @@ public class ApplicationWindow extends Application{
 
 	@Override
 	public void start(Stage rootStage) throws Exception { 
+		AnchorPane componentWindow = new AnchorPane();
 		VBox componentLayout = new VBox();
-		componentLayout.setPadding(new Insets(0,0,20,0));
+		BorderPane tableDisplay = new BorderPane();
+		GridPane searchBox = new GridPane();
+		searchBox.setAlignment(Pos.TOP_RIGHT);
+		final TextField dataSearch = new TextField();
+		GridPane.setConstraints(dataSearch, 0,1);
+		GridPane.setMargin(dataSearch, new Insets(5,5,5,5));
+		Label dataSearchLabel = new Label("Search: ");
+		GridPane.setConstraints(dataSearchLabel, 0,0);
 		
-        //The button uses an inner class to handle the button click event
-        Button tmpButton = new Button("Button");
-        tmpButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                //do something
-            }
-        });
-        
+		componentWindow.setMinHeight(WINDOW_MIN_HEIGHT);
+		componentWindow.setMinWidth(WINDOW_MIN_WIDTH);
+		     
         //Add the VBox to the Scene
-        Scene scene = new Scene(componentLayout,600,600);
+        Scene scene = new Scene(componentWindow,WINDOW_MIN_WIDTH,WINDOW_MIN_HEIGHT);
+        searchBox.getChildren().addAll(dataSearchLabel, dataSearch);
         
+        BorderPane.setAlignment(searchBox, Pos.TOP_RIGHT);
+        tableDisplay.setTop(searchBox);
+        
+        tableDisplay.setRight(setupMediaDataTable(dataSearch));
+        componentLayout.getChildren().addAll(setupMenuBar(), tableDisplay);
+		componentWindow.getChildren().addAll(componentLayout);
         //Adds MenuBar to all children Views
-        ((VBox) scene.getRoot()).getChildren().addAll(setupMenuBar());
+        //((AnchorPane) scene.getRoot()).getChildren().addAll(setupMenuBar());
         
         //Add the Scene to the Stage
         rootStage.setScene(scene);
         rootStage.show();
+	}
+	
+//private Data Table mutators / accessors
+	private TableView<MediaFile> setupMediaDataTable(final TextField search){
+		TableView<MediaFile> dataTable = new TableView<MediaFile>();
+		dataTable.setMinHeight(WINDOW_MIN_HEIGHT);
+		List<MediaFile> data = Main.getMasterDataAsList();
+		
+		
+		//initialize the columns
+		dataTable.getColumns().setAll(getDataTableColumns());
+		
+		//wrap the ObservableList in a FilteredList
+		FilteredList<MediaFile> filteredData = new FilteredList<MediaFile>(FXCollections.observableList(data), p -> true);
+		
+		//set the filter Predicate whenever the filter changes
+		search.textProperty().addListener((observable, oldValue, newValue)-> {
+			filteredData.setPredicate(media -> {
+				//If filter is empty, display all
+				if(newValue == null || newValue.isEmpty()){
+					return true;
+				}
+				
+				String lowerCaseFilter = newValue.toLowerCase();
+				if(media.getSongName().toLowerCase().contains(lowerCaseFilter))
+					return true;
+				else if(media.getArtistName().toString().toLowerCase().contains(lowerCaseFilter))
+					return true;
+				else if(media.getAlbumName().toLowerCase().contains(lowerCaseFilter))
+					return true;
+				else if(media.getGenre().toLowerCase().contains(lowerCaseFilter))
+					return true;
+				else return false;
+			});
+		});
+		
+		//wrap the filtered list in a sorted list
+		SortedList<MediaFile> sortedData = new SortedList<MediaFile>(filteredData);
+		
+		// Bind the SortedList comparator to the TableView comparator
+		sortedData.comparatorProperty().bind(dataTable.comparatorProperty());
+		
+		// Show the Data
+		dataTable.setItems(sortedData);
+		
+		return dataTable;
+	}
+	
+	private List<TableColumn<MediaFile, ?>> getDataTableColumns(){
+		//Column 1: Name
+		TableColumn<MediaFile, String> mediaNameCol = new TableColumn<MediaFile, String>("Name");
+		mediaNameCol.setCellValueFactory(cellData -> cellData.getValue().getSongNameProperty());
+		
+		//Column 2: Artist
+		TableColumn<MediaFile, String> mediaArtistCol = new TableColumn<MediaFile, String>("Artist(s)");
+		mediaArtistCol.setCellValueFactory(cellData -> cellData.getValue().getArtistNameProperty());
+		
+		//Column 3: Album
+		TableColumn<MediaFile, String> mediaAlbumCol = new TableColumn<MediaFile, String>("Album");
+		mediaAlbumCol.setCellValueFactory(cellData -> cellData.getValue().getAlbumNameProperty());
+		
+		//Column 4: Album Number
+		TableColumn<MediaFile, Number> mediaNumberCol = new TableColumn<MediaFile, Number>("Number");
+		mediaNumberCol.setCellValueFactory(cellData -> cellData.getValue().getAlbumNumberProperty());
+		
+		//Column 5: Genre
+		TableColumn<MediaFile, String> mediaGenreCol = new TableColumn<MediaFile, String>("Genre");
+		mediaGenreCol.setCellValueFactory(cellData -> cellData.getValue().getGenreProperty());
+		
+		//Column 6: Song Length
+		TableColumn<MediaFile, Number> mediaLengthCol = new TableColumn<MediaFile, Number>("Length");
+		mediaLengthCol.setCellValueFactory(cellData -> cellData.getValue().getSongLengthProperty());
+		return Arrays.asList(mediaNameCol, mediaArtistCol, mediaAlbumCol, mediaNumberCol,mediaGenreCol, mediaLengthCol);		
 	}
 	
 //private menu mutators / accessors	
@@ -69,7 +165,7 @@ public class ApplicationWindow extends Application{
  
         // --- Menu View
         Menu menuView = getMenuViewOption();
- 
+        menuBar.setMinWidth(WINDOW_MIN_WIDTH);
         menuBar.getMenus().addAll(menuFile, menuEdit, menuView);
         return menuBar;
 	}
