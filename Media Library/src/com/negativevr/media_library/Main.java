@@ -32,22 +32,22 @@ public class Main {
 		try{
 			readFromFile();
 		} catch(IOException e){
-			
+			e.printStackTrace();
 		}
 		List<String> name= new ArrayList<>();
 		name.add("The Killers");
 		MediaFile file = new MediaFile(name, "Kill", 4, new Date().toString(),
-				 new Date().toString(), "When You Were Young", 210.0, "C:\\","Alternative", 124L);
+				 new Date().toString(), "When You Were Young", 210.0, "C:\\","Alternative", getNextUUID());
 		
 		List<String> name1= new ArrayList<>();
 		name1.add("One Republic");
 		MediaFile file1 = new MediaFile(name1, "Hi", 6, new Date().toString(),
-				 new Date().toString(), "All The Right Moves", 193.0, "C:\\", "Rock", 3245L);
+				 new Date().toString(), "All The Right Moves", 193.0, "C:\\", "Rock", getNextUUID());
 		
 		List<String> name2= new ArrayList<>();
 		name2.add("Stromae");
 		MediaFile file2 = new MediaFile(name2, "Flower", 12, new Date().toString(),
-				 new Date().toString(), "Formidable", 510.0, "C:\\","Pop", 1214L);
+				 new Date().toString(), "Formidable", 510.0, "C:\\","Pop", getNextUUID());
 		
 		MediaFile file3 = new MediaFile(new MediaFileAttribute().setArtistStrings(Arrays.asList("The Killers"))
 										.setAlbum("Sam's Town")
@@ -59,11 +59,11 @@ public class Main {
 										.setNumber(1)
 										.setPath("C:\\")
 										.setPlays(0)
-				, 1000L);
+										, getNextUUID());
 		
-		masterMediaData.put(124L, file);
-		masterMediaData.put(3245L, file1);
-		masterMediaData.put(1214L, file2);
+		masterMediaData.put(file .getUUID(), file);
+		masterMediaData.put(file1.getUUID(), file1);
+		masterMediaData.put(file2.getUUID(), file2);
 		masterMediaData.put(file3.getUUID(), file3);
 		 
 		//System.out.println(masterMediaData);
