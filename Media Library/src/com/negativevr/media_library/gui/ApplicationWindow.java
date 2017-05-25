@@ -45,6 +45,10 @@ public class ApplicationWindow extends Application{
 	public static void main(String[] args){
 		launch(args);
 	}
+	
+	public void begin(String[] args){
+		launch(args);
+	}
 
 	@Override
 	public void start(Stage rootStage) throws Exception { 
