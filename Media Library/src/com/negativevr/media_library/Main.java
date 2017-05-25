@@ -1,6 +1,7 @@
 package com.negativevr.media_library;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,18 +31,18 @@ public class Main {
 	public static void main(String[] args) {
 		List<String> name= new ArrayList<>();
 		name.add("The Killers");
-		MediaFile file = new MediaFile(name, "Kill\n", 4, new Date().toString(),
-				 new Date().toString(), "When You Were Young\n", 210.0, "C:\\","Alternative", 124L);
+		MediaFile file = new MediaFile(name, "Kill", 4, new Date().toString(),
+				 new Date().toString(), "When You Were Young", 210.0, "C:\\","Alternative", 124L);
 		
 		List<String> name1= new ArrayList<>();
 		name1.add("One Republic");
-		MediaFile file1 = new MediaFile(name1, "Hi\n", 6, new Date().toString(),
-				 new Date().toString(), "All The Right Moves\n", 193.0, "C:\\", "Rock", 3245L);
+		MediaFile file1 = new MediaFile(name1, "Hi", 6, new Date().toString(),
+				 new Date().toString(), "All The Right Moves", 193.0, "C:\\", "Rock", 3245L);
 		
 		List<String> name2= new ArrayList<>();
 		name2.add("Stromae");
-		MediaFile file2 = new MediaFile(name2, "Flower\n", 12, new Date().toString(),
-				 new Date().toString(), "Formidable\n", 510.0, "C:\\","Pop", 1214L);
+		MediaFile file2 = new MediaFile(name2, "Flower", 12, new Date().toString(),
+				 new Date().toString(), "Formidable", 510.0, "C:\\","Pop", 1214L);
 		
 		MediaFile file3 = new MediaFile(new MediaFileAttribute().setArtistStrings(Arrays.asList("The Killers"))
 										.setAlbum("Sam's Town")
@@ -64,6 +65,11 @@ public class Main {
 		
 		ApplicationWindow app = new ApplicationWindow();
 		app.begin(args);
+		try {
+			readToDisk();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 //non-private accessors / mutators	
@@ -85,14 +91,14 @@ public class Main {
 	}
 	
 // private accessors/ mutators
-	public void readToDisk(){
-	for(Map.Entry<Long, MediaFile> entry: masterMediaData.entrySet())
-	{
-		MediaFile file=entry.getValue();
-		File dir = new File("C:\\Music\\"+ file.getArtistName().get(0)+ "\\" + file.getAlbumName()+ "\\" + file.getUUID() + ".data");
-	    dir.mkdir();
-	}
-	
-	
+	public static void readToDisk() throws IOException{
+		for(Map.Entry<Long, MediaFile> entry: masterMediaData.entrySet()){
+			MediaFile file=entry.getValue();
+			File dir = new File("C:\\Music\\"+ file.getArtistName().get(0).toLowerCase()+ "\\");
+		    dir.mkdirs();
+		    new File("C:\\Music\\" + file.getArtistName().get(0).toLowerCase() + "\\"
+		    			+ file.getAlbumName().toLowerCase() + "\\").mkdirs();
+		    file.writeToDisk();
+		}
 	}
 }
