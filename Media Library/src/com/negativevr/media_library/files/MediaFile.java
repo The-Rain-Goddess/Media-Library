@@ -247,6 +247,7 @@ public class MediaFile implements Serializable {
 		obj_out.writeObject(this);
 		obj_out.close();
 		f_out.close();
+		
 	}
 	
 	@Override

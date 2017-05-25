@@ -1,5 +1,6 @@
 package com.negativevr.media_library;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -26,23 +27,24 @@ public class Main {
 		List<String> name= new ArrayList<>();
 		name.add("The Killers");
 		MediaFile file = new MediaFile(name, "Kill\n", 4, new Date().toString(),
-				 new Date().toString(), "When You Were Young\n", 210.0, "C:\\", 124L);
+				 new Date().toString(), "When You Were Young\n", 210.0, "C:\\", "rock", 124L);
 		
 		List<String> name1= new ArrayList<>();
 		name1.add("One Republic");
 		MediaFile file1 = new MediaFile(name1, "Hi\n", 6, new Date().toString(),
-				 new Date().toString(), "All The Right Moves\n", 193.0, "C:\\", 3245L);
+				 new Date().toString(), "All The Right Moves\n", 193.0, "C:\\", "hip hop", 3245L);
 		
 		List<String> name2= new ArrayList<>();
 		name2.add("Stromae");
 		MediaFile file2 = new MediaFile(name2, "Flower\n", 12, new Date().toString(),
-				 new Date().toString(), "Formidable\n", 510.0, "C:\\", 1214L);
+				 new Date().toString(), "Formidable\n", 510.0, "C:\\", "pop", 1214L);
 		
 		masterMediaData.put(124L, file);
 		masterMediaData.put(3245L, file1);
 		masterMediaData.put(1214L, file2);
 		 
 		System.out.println(masterMediaData);
+		
 	}
 	
 //non-private accessors / mutators	
@@ -61,6 +63,15 @@ public class Main {
 	
 // private accessors/ mutators
 	
+	public void readToDisk(){
+	for(Map.Entry<Long, MediaFile> entry: masterMediaData.entrySet())
+	{
+		MediaFile file=entry.getValue();
+		File dir = new File("C:\\Music\\"+ file.getArtistName().get(0)+ "\\" + file.getAlbumName()+ "\\" + file.getUUID() + ".data");
+	    dir.mkdir();
+	}
 	
+	 
 	
+	}
 }
