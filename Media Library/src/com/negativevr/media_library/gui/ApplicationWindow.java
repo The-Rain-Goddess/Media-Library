@@ -9,6 +9,8 @@ import com.negativevr.media_library.files.MediaFile;
 import com.negativevr.media_library.files.MediaFileAttribute;
 
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
@@ -278,7 +280,7 @@ public class ApplicationWindow extends Application{
 		
 		//Defining path text field
 		final TextField songPath = new TextField();
-		songPath.setPromptText("C:\\");
+		songPath.setPromptText("C:\\... *");
 		songPath.setPrefColumnCount(30);
 		songPath.setEditable(false);
 		songPath.setFocusTraversable(false);
@@ -313,6 +315,14 @@ public class ApplicationWindow extends Application{
 		final TextField albumNumber = new TextField();
 		albumNumber.setPrefColumnCount(20);
 		albumNumber.setPromptText("Enter the song's album number.");
+		albumNumber.textProperty().addListener(new ChangeListener<String>() {
+	        @Override
+	        public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+	            if (!newValue.matches("\\d*")) {
+	                albumNumber.setText(newValue.replaceAll("[^\\d]", ""));
+	            }
+	        }
+	    });
 		GridPane.setConstraints(albumNumber, 1, 5);
 		final Label songNumberLabel = new Label("Number: ");
 		GridPane.setConstraints(songNumberLabel, 0, 5);
@@ -325,6 +335,10 @@ public class ApplicationWindow extends Application{
 		final Label songGenreLabel = new Label("Genre: ");
 		GridPane.setConstraints(songGenreLabel, 0, 6);
 		
+		//required label
+		final Label requiredLabel = new Label("* Required");
+		GridPane.setConstraints(requiredLabel, 1,7);
+		
 		//Defining the Submit button
 		Button submit = new Button("Submit");
 		GridPane.setConstraints(submit, 2, 3);
@@ -336,7 +350,8 @@ public class ApplicationWindow extends Application{
                 		&& artistNames.textProperty()!=null
                 		&& !songName.textProperty().getValue().equals("")
                 		&& !albumName.textProperty().getValue().equals("")
-                		&& !artistNames.textProperty().getValue().equals("")){
+                		&& !artistNames.textProperty().getValue().equals("")
+                		/* && !songPath.textProperty().getValue().equals("") */){
                 	MediaFile newFile = new MediaFile(new MediaFileAttribute()
                 					.setAlbum(albumName.textProperty())
                 					.setName(songName.textProperty())
@@ -345,7 +360,7 @@ public class ApplicationWindow extends Application{
                 					.setDateCreated(new Date().toString())
                 					.setNumber(Integer.parseInt(albumNumber.textProperty().getValue()))
                 					.setPlays(0)
-                					.setLength(0.0),
+                					.setLength(0.0), //TODO: figure out how to get length from File Path
                 					Main.getNextUUID());
                 	System.out.println("Success!");
                 	Main.getMasterData().put(newFile.getUUID(), newFile);
@@ -358,6 +373,14 @@ public class ApplicationWindow extends Application{
 		
 		//Defining the Clear button
 		Button clear = new Button("Clear");
+		clear.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+			public void handle(ActionEvent t) {
+            	List<TextField> fields = Arrays.asList(songPath, songName, artistNames, albumName, albumNumber, genre);
+            	for(TextField s : fields)
+            		s.textProperty().set("");
+            }
+        });
 		GridPane.setConstraints(clear, 2, 4);
 		
 		//Open file button
@@ -378,7 +401,7 @@ public class ApplicationWindow extends Application{
 	            });
 		GridPane.setConstraints(openFile, 2, 0);
 		
-		return Arrays.asList(	songPathLabel, songNameLabel, songArtistLabel, songAlbumLabel, songNumberLabel, songGenreLabel,
+		return Arrays.asList(	songPathLabel, songNameLabel, songArtistLabel, songAlbumLabel, songNumberLabel, songGenreLabel, requiredLabel,
 								songPath, songName, artistNames, albumName, albumNumber, genre,
 								openFile, submit, clear);
 	}
