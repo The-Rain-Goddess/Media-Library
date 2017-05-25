@@ -20,6 +20,7 @@ import com.negativevr.media_library.gui.ApplicationWindow;
 
 public class Main {
 	private static final Map<Long, MediaFile> masterMediaData = Collections.synchronizedMap(new TreeMap<Long, MediaFile>());
+	private static long UUID = 0;
 	
 	public Main() {
 		
@@ -76,6 +77,10 @@ public class Main {
 		for( Map.Entry<Long, MediaFile> entry : masterMediaData.entrySet()){
 			list.add(entry.getValue());
 		} return list;
+	}
+	
+	public static long getNextUUID(){
+		return ++UUID;
 	}
 	
 // private accessors/ mutators
