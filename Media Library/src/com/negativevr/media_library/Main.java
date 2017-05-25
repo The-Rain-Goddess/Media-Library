@@ -28,7 +28,7 @@ public class Main {
 //non-private accessors / mutators	
 	/**
 	 * Returns the Master Media Data map; a synchronized TreeMap<Long, {@link com.negativevr.media_library.files.MediaFile;}>.
-	 * @return masterMediaData
+	 * @return ccmasterMediaData
 	 */
 	public static Map<Long, MediaFile> getMasterData(){ return masterMediaData; }
 	
@@ -38,4 +38,9 @@ public class Main {
 			list.add(entry.getValue());
 		} return list;
 	}
+	
+// private accessors/ mutators
+	
+	
+	
 }
