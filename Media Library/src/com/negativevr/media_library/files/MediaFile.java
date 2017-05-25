@@ -247,10 +247,10 @@ public class MediaFile implements Serializable {
 	
 	@Override
 	public String toString() {
-		return "\nArtist Name(s): \n"+artistName+ "\n\nAlbum Name: \n"+ albumName + 
-				"\nAlbum Number: \n"+albumNumber+"\n\nDate Created: \n" + dateCreated+
-				"\n\nDate Recorded: \n"+dateRecorded+"\n\nSong Name: \n"+ songName
-				+ "\nSong Time: \n"+ songTime+ "\n\nFile Path: \n"+filePath;
+		return "\nArtist Name(s): \n"+artistName.get(0).get()+ "\n\nAlbum Name: \n"+ albumName.get() + 
+				"\nAlbum Number: \n"+albumNumber.get()+"\n\nDate Created: \n" + dateCreated.get()+
+				"\n\nDate Recorded: \n"+dateRecorded.get()+"\n\nSong Name: \n"+ songName.get()
+				+ "\nSong Time: \n"+ songTime.get()+ "\n\nFile Path: \n"+filePath.get();
 	}
 		
 	public static void main(String[] args) {
