@@ -58,7 +58,7 @@ public class Main {
 		masterMediaData.put(1214L, file2);
 		masterMediaData.put(file3.getUUID(), file3);
 		 
-		System.out.println(masterMediaData);
+		//System.out.println(masterMediaData);
 		
 		ApplicationWindow app = new ApplicationWindow();
 		app.begin(args);
