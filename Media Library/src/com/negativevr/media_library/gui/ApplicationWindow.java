@@ -1,5 +1,9 @@
 package com.negativevr.media_library.gui;
 import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -7,6 +11,7 @@ import java.util.List;
 import com.negativevr.media_library.Main;
 import com.negativevr.media_library.files.MediaFile;
 import com.negativevr.media_library.files.MediaFileAttribute;
+import com.negativevr.media_library.storage.FilePathTreeItem;
 
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
@@ -28,11 +33,14 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -83,6 +91,7 @@ public class ApplicationWindow extends Application{
         
         //align dataTable
         tableDisplay.setRight(setupMediaDataTable());
+        tableDisplay.setLeft(setupMediaFileBrowser());
         componentLayout.getChildren().addAll(setupMenuBar(), tableDisplay);
         
         //add componentLayout to Window
@@ -91,6 +100,38 @@ public class ApplicationWindow extends Application{
         //Add the Scene to the Stage
         rootStage.setScene(scene);
         rootStage.show();
+	}
+	
+//private File Browser mutators / accessors
+	private VBox setupMediaFileBrowser(){
+		VBox treeBox = new VBox();
+	    treeBox.setPadding(new Insets(10,10,10,10));
+	    treeBox.setSpacing(10);
+	    
+	  //setup the file browser root
+	    String hostName = "computer";
+	    try{
+	    	hostName = InetAddress.getLocalHost().getHostName();
+	    } catch(UnknownHostException x){
+	    	x.printStackTrace();
+	    }
+	    TreeItem<String> rootNode = new TreeItem<>(hostName,new ImageView(new Image("remove.png")));
+	    //ClassLoader.getSystemResourceAsStream("com/huguesjohnson/javafxfilebrowsedemo/computer.png")
+	    Iterable<Path> rootDirectories = FileSystems.getDefault().getRootDirectories();
+	    for(Path name:rootDirectories){
+	      FilePathTreeItem treeNode = new FilePathTreeItem(name);
+	      rootNode.getChildren().add(treeNode);
+	      rootNode.getChildren().addAll(treeNode.getChildren());
+	    }
+	    rootNode.setExpanded(true);
+	    
+	    //create the tree view
+	    TreeView<String> treeView = new TreeView<>(rootNode);
+	    //add everything to the tree pane
+	    treeBox.getChildren().addAll(new Label("File browser"),treeView);
+	    VBox.setVgrow(treeView,Priority.ALWAYS);
+	    
+	    return treeBox;
 	}
 	
 //private Data Table mutators / accessors
