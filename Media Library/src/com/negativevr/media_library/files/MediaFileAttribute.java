@@ -13,6 +13,7 @@ public class MediaFileAttribute {
 	private DoubleProperty length;
 	private IntegerProperty plays;
 
+//getters	
 	/**
 	 * @return the name
 	 */
@@ -83,83 +84,94 @@ public class MediaFileAttribute {
 		return plays;
 	}
 
+//setters
 	/**
 	 * @param name
 	 *            the name to set
 	 */
-	public void setName(StringProperty name) {
+	public MediaFileAttribute setName(StringProperty name) {
 		this.name = name;
+		return this;
 	}
 
 	/**
 	 * @param album
 	 *            the album to set
 	 */
-	public void setAlbum(StringProperty album) {
+	public MediaFileAttribute setAlbum(StringProperty album) {
 		this.album = album;
+		return this;
 	}
 
 	/**
 	 * @param dateCreated
 	 *            the dateCreated to set
 	 */
-	public void setDateCreated(StringProperty dateCreated) {
+	public MediaFileAttribute setDateCreated(StringProperty dateCreated) {
 		this.dateCreated = dateCreated;
+		return this;
 	}
 
 	/**
 	 * @param dateRecorded
 	 *            the dateRecorded to set
 	 */
-	public void setDateRecorded(StringProperty dateRecorded) {
+	public MediaFileAttribute setDateRecorded(StringProperty dateRecorded) {
 		this.dateRecorded = dateRecorded;
+		return this;
 	}
 
 	/**
 	 * @param path
 	 *            the path to set
 	 */
-	public void setPath(StringProperty path) {
+	public MediaFileAttribute setPath(StringProperty path) {
 		this.path = path;
+		return this;
 	}
 
 	/**
 	 * @param genre
 	 *            the genre to set
 	 */
-	public void setGenre(StringProperty genre) {
+	public MediaFileAttribute setGenre(StringProperty genre) {
 		this.genre = genre;
+		return this;
 	}
 
 	/**
 	 * @param artists
 	 *            the artists to set
 	 */
-	public void setArtists(List<StringProperty> artists) {
+	public MediaFileAttribute setArtists(List<StringProperty> artists) {
 		this.artists = artists;
+		return this;
 	}
 
 	/**
 	 * @param number
 	 *            the number to set
 	 */
-	public void setNumber(IntegerProperty number) {
+	public MediaFileAttribute setNumber(IntegerProperty number) {
 		this.number = number;
+		return this;
 	}
 
 	/**
 	 * @param length
 	 *            the length to set
 	 */
-	public void setLength(DoubleProperty length) {
+	public MediaFileAttribute setLength(DoubleProperty length) {
 		this.length = length;
+		return this;
 	}
 
 	/**
 	 * @param plays
 	 *            the plays to set
 	 */
-	public void setPlays(IntegerProperty plays) {
+	public MediaFileAttribute setPlays(IntegerProperty plays) {
 		this.plays = plays;
+		return this;
 	}
 }
