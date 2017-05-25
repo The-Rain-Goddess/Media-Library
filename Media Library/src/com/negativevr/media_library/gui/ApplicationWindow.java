@@ -1,12 +1,16 @@
 package com.negativevr.media_library.gui;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import com.negativevr.media_library.Main;
 import com.negativevr.media_library.files.MediaFile;
+import com.negativevr.media_library.files.MediaFileAttribute;
 
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
@@ -35,17 +39,17 @@ import javafx.stage.Stage;
 
 public class ApplicationWindow extends Application{
 
-	private final double WINDOW_MIN_WIDTH = 600;
-	private final double WINDOW_MIN_HEIGHT = 600;
-	
+	private final double WINDOW_MIN_WIDTH = 900;
+	private final double WINDOW_MIN_HEIGHT = 800;
+	private TextField search;
+	private TableView<MediaFile> dataTable;
+
+//constructor	
 	public ApplicationWindow() {
 		
 	}
 	
-	public static void main(String[] args){
-		launch(args);
-	}
-	
+//class start point	
 	public void begin(String[] args){
 		launch(args);
 	}
@@ -55,29 +59,34 @@ public class ApplicationWindow extends Application{
 		AnchorPane componentWindow = new AnchorPane();
 		VBox componentLayout = new VBox();
 		BorderPane tableDisplay = new BorderPane();
+		
+		//sets up searchbox
 		GridPane searchBox = new GridPane();
 		searchBox.setAlignment(Pos.TOP_RIGHT);
-		final TextField dataSearch = new TextField();
-		GridPane.setConstraints(dataSearch, 0,1);
-		GridPane.setMargin(dataSearch, new Insets(5,5,5,5));
+		search = new TextField();
+		GridPane.setConstraints(search, 0,1);
+		GridPane.setMargin(search, new Insets(5,5,5,5));
 		Label dataSearchLabel = new Label("Search: ");
 		GridPane.setConstraints(dataSearchLabel, 0,0);
 		
+		//set main window size
 		componentWindow.setMinHeight(WINDOW_MIN_HEIGHT);
 		componentWindow.setMinWidth(WINDOW_MIN_WIDTH);
 		     
-        //Add the VBox to the Scene
-        Scene scene = new Scene(componentWindow,WINDOW_MIN_WIDTH,WINDOW_MIN_HEIGHT);
-        searchBox.getChildren().addAll(dataSearchLabel, dataSearch);
+        //Create the scene and add the parent container to it
+        Scene scene = new Scene(componentWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT);
         
+        //align Search box
+        searchBox.getChildren().addAll(dataSearchLabel, search);
         BorderPane.setAlignment(searchBox, Pos.TOP_RIGHT);
         tableDisplay.setTop(searchBox);
         
-        tableDisplay.setRight(setupMediaDataTable(dataSearch));
+        //align dataTable
+        tableDisplay.setRight(setupMediaDataTable());
         componentLayout.getChildren().addAll(setupMenuBar(), tableDisplay);
+        
+        //add componentLayout to Window
 		componentWindow.getChildren().addAll(componentLayout);
-        //Adds MenuBar to all children Views
-        //((AnchorPane) scene.getRoot()).getChildren().addAll(setupMenuBar());
         
         //Add the Scene to the Stage
         rootStage.setScene(scene);
@@ -85,15 +94,31 @@ public class ApplicationWindow extends Application{
 	}
 	
 //private Data Table mutators / accessors
-	private TableView<MediaFile> setupMediaDataTable(final TextField search){
-		TableView<MediaFile> dataTable = new TableView<MediaFile>();
+	private TableView<MediaFile> setupMediaDataTable(){
+		dataTable = new TableView<MediaFile>();
+		dataTable.setId("Data Table");
 		dataTable.setMinHeight(WINDOW_MIN_HEIGHT);
-		List<MediaFile> data = Main.getMasterDataAsList();
-		
+		dataTable.setMinWidth(2*WINDOW_MIN_WIDTH/3);
 		
 		//initialize the columns
 		dataTable.getColumns().setAll(getDataTableColumns());
 		
+		//sort and filter the data
+		SortedList<MediaFile> sortedData = getSortedData();
+		
+		// Bind the SortedList comparator to the TableView comparator
+		sortedData.comparatorProperty().bind(dataTable.comparatorProperty());
+		
+		// Show the Data
+		dataTable.setItems(sortedData);
+		
+		return dataTable;
+	}
+	
+	private SortedList<MediaFile> getSortedData(){
+		//get the data
+		List<MediaFile> data = Main.getMasterDataAsList();
+				
 		//wrap the ObservableList in a FilteredList
 		FilteredList<MediaFile> filteredData = new FilteredList<MediaFile>(FXCollections.observableList(data), p -> true);
 		
@@ -121,13 +146,18 @@ public class ApplicationWindow extends Application{
 		//wrap the filtered list in a sorted list
 		SortedList<MediaFile> sortedData = new SortedList<MediaFile>(filteredData);
 		
+		return sortedData;
+	}
+	
+	private void updateDataTable(){
+		//sort and filter the data
+		SortedList<MediaFile> sortedData = getSortedData();
+		
 		// Bind the SortedList comparator to the TableView comparator
 		sortedData.comparatorProperty().bind(dataTable.comparatorProperty());
 		
 		// Show the Data
 		dataTable.setItems(sortedData);
-		
-		return dataTable;
 	}
 	
 	private List<TableColumn<MediaFile, ?>> getDataTableColumns(){
@@ -169,6 +199,7 @@ public class ApplicationWindow extends Application{
  
         // --- Menu View
         Menu menuView = getMenuViewOption();
+        
         menuBar.setMinWidth(WINDOW_MIN_WIDTH);
         menuBar.getMenus().addAll(menuFile, menuEdit, menuView);
         return menuBar;
@@ -176,6 +207,7 @@ public class ApplicationWindow extends Application{
 	
 	private Menu getMenuFileOption(){
 		Menu menu = new Menu("File");
+		
 		MenuItem add = getMenuItem("Add", new MenuAction(){
 			@Override
 			public void execute() {
@@ -189,6 +221,7 @@ public class ApplicationWindow extends Application{
 				showRemoveWindow();
 			}
 		});
+		
 	    menu.getItems().addAll(add, remove);
 	    return menu;
 	}
@@ -217,14 +250,18 @@ public class ApplicationWindow extends Application{
 
 //private button mutators
 	private void showAddWindow(){
-		System.out.println("HI");
+		//create new Stage
 		Stage addWindow = new Stage();
 		addWindow.setTitle("ADD Media");
 		GridPane componentLayout = getAddWindowLayout();
 		
+		//add all window components to componentLayout
 		componentLayout.getChildren().addAll(getWindowComponents(addWindow));
 		
+		//create Scene
 		Scene scene = new Scene(componentLayout,550,300);
+		
+		//set Screen to show Scene
 		addWindow.setScene(scene);
 		addWindow.show();
 	}
@@ -243,7 +280,7 @@ public class ApplicationWindow extends Application{
 		
 		//Defining path text field
 		final TextField songPath = new TextField();
-		songPath.setPromptText("C:\\");
+		songPath.setPromptText("C:\\... *");
 		songPath.setPrefColumnCount(30);
 		songPath.setEditable(false);
 		songPath.setFocusTraversable(false);
@@ -278,6 +315,14 @@ public class ApplicationWindow extends Application{
 		final TextField albumNumber = new TextField();
 		albumNumber.setPrefColumnCount(20);
 		albumNumber.setPromptText("Enter the song's album number.");
+		albumNumber.textProperty().addListener(new ChangeListener<String>() {
+	        @Override
+	        public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+	            if (!newValue.matches("\\d*")) {
+	                albumNumber.setText(newValue.replaceAll("[^\\d]", ""));
+	            }
+	        }
+	    });
 		GridPane.setConstraints(albumNumber, 1, 5);
 		final Label songNumberLabel = new Label("Number: ");
 		GridPane.setConstraints(songNumberLabel, 0, 5);
@@ -290,12 +335,52 @@ public class ApplicationWindow extends Application{
 		final Label songGenreLabel = new Label("Genre: ");
 		GridPane.setConstraints(songGenreLabel, 0, 6);
 		
+		//required label
+		final Label requiredLabel = new Label("* Required");
+		GridPane.setConstraints(requiredLabel, 1,7);
+		
 		//Defining the Submit button
 		Button submit = new Button("Submit");
 		GridPane.setConstraints(submit, 2, 3);
+		submit.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+			public void handle(ActionEvent t) {
+                if(songName.textProperty()!=null 
+                		&& albumName.textProperty() != null 
+                		&& artistNames.textProperty()!=null
+                		&& !songName.textProperty().getValue().equals("")
+                		&& !albumName.textProperty().getValue().equals("")
+                		&& !artistNames.textProperty().getValue().equals("")
+                		/* && !songPath.textProperty().getValue().equals("") */){
+                	MediaFile newFile = new MediaFile(new MediaFileAttribute()
+                					.setAlbum(albumName.textProperty())
+                					.setName(songName.textProperty())
+                					.setArtistStrings(Arrays.asList(artistNames.textProperty().getValue().split("; ")))
+                					.setGenre(genre.textProperty())
+                					.setDateCreated(new Date().toString())
+                					.setNumber(Integer.parseInt(albumNumber.textProperty().getValue()))
+                					.setPlays(0)
+                					.setLength(0.0), //TODO: figure out how to get length from File Path
+                					Main.getNextUUID());
+                	System.out.println("Success!");
+                	Main.getMasterData().put(newFile.getUUID(), newFile);
+                	System.out.println(Main.getMasterDataAsList());
+                	((Stage)((Button)t.getSource()).getScene().getWindow()).close();
+                	updateDataTable();
+                }
+            }
+        });
 		
 		//Defining the Clear button
 		Button clear = new Button("Clear");
+		clear.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+			public void handle(ActionEvent t) {
+            	List<TextField> fields = Arrays.asList(songPath, songName, artistNames, albumName, albumNumber, genre);
+            	for(TextField s : fields)
+            		s.textProperty().set("");
+            }
+        });
 		GridPane.setConstraints(clear, 2, 4);
 		
 		//Open file button
@@ -316,7 +401,7 @@ public class ApplicationWindow extends Application{
 	            });
 		GridPane.setConstraints(openFile, 2, 0);
 		
-		return Arrays.asList(	songPathLabel, songNameLabel, songArtistLabel, songAlbumLabel, songNumberLabel, songGenreLabel,
+		return Arrays.asList(	songPathLabel, songNameLabel, songArtistLabel, songAlbumLabel, songNumberLabel, songGenreLabel, requiredLabel,
 								songPath, songName, artistNames, albumName, albumNumber, genre,
 								openFile, submit, clear);
 	}
