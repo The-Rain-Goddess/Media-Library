@@ -79,6 +79,23 @@ public class MediaFile implements Serializable {
 		this.UUID= UUID;
 	}
 	
+	public MediaFile(MediaFileAttribute fileAttribute, long UUID){
+		this.artistName = fileAttribute.getArtists();
+		this.albumName = fileAttribute.getAlbum();
+		this.albumNumber = fileAttribute.getNumber();
+		this.dateCreated = fileAttribute.getDateCreated();
+		this.dateRecorded = fileAttribute.getDateRecorded();
+		this.songName = fileAttribute.getName();
+		this.songTime = fileAttribute.getLength();
+		this.filePath = fileAttribute.getPath();
+		this.genre = fileAttribute.getGenre();
+		this.UUID = UUID;
+	}
+	
+	public MediaFile(){
+		this.UUID = 999L;
+	}
+	
 //private accessors/mutators
 	private List<StringProperty> convertToProperty(List<String> l){
 		List<StringProperty> list  = new ArrayList<>();
