@@ -358,7 +358,7 @@ public class ApplicationWindow extends Application{
                 					.setArtistStrings(Arrays.asList(artistNames.textProperty().getValue().split("; ")))
                 					.setGenre(genre.textProperty())
                 					.setDateCreated(new Date().toString())
-                					.setNumber(Integer.parseInt(albumNumber.textProperty().getValue()))
+                					.setNumber(Integer.parseInt(albumNumber.textProperty().getValue().replace("", "0")))
                 					.setPlays(0)
                 					.setLength(0.0), //TODO: figure out how to get length from File Path
                 					Main.getNextUUID());
