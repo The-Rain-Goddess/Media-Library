@@ -30,6 +30,7 @@ public class Main {
 
 	public static void main(String[] args) {
 		try{
+			createHomeDirectory();
 			readFromFile();
 		} catch(IOException e){
 			e.printStackTrace();
@@ -109,5 +110,11 @@ public class Main {
 	
 	private static void readFromFile() throws IOException{
 		
+	}
+	
+	private static void createHomeDirectory() throws IOException{
+		File home = new File("C:\\Music\\");
+		if(!home.exists())
+			home.mkdirs();
 	}
 }
