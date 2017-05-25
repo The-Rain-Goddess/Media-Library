@@ -22,15 +22,15 @@ public class MediaFile implements Serializable {
 	private static final long serialVersionUID = -5898952383948456405L;
 	private final long UUID;
 
-	private List<StringProperty> artistName;
-	private StringProperty albumName;
-	private IntegerProperty albumNumber;
-	private StringProperty dateCreated;
-	private StringProperty dateRecorded;
-	private StringProperty songName;
-	private DoubleProperty songTime;
-	private StringProperty filePath;
-	private StringProperty genre;
+	private transient List<StringProperty> artistName;
+	private String albumName;
+	private int albumNumber;
+	private String dateCreated;
+	private String dateRecorded;
+	private String songName;
+	private double songTime;
+	private String filePath;
+	private String genre;
 
 //constructors
 	public MediaFile(List<StringProperty> artistName, 
@@ -45,14 +45,14 @@ public class MediaFile implements Serializable {
 			long UUID)
 	{
 		this.artistName= artistName;
-		this.albumName= albumName;
-		this.albumNumber= albumNumber;
-		this.dateCreated= dateCreated;
-		this.dateRecorded= dateRecorded;
-		this.songName= songName;
-		this.songTime= songTime;
-		this.filePath= filePath;
-		this.genre = genre;
+		this.albumName= albumName.get();
+		this.albumNumber= albumNumber.get();
+		this.dateCreated= dateCreated.get();
+		this.dateRecorded= dateRecorded.get();
+		this.songName= songName.get();
+		this.songTime= songTime.get();
+		this.filePath= filePath.get();
+		this.genre = genre.get();
 		this.UUID= UUID;
 	}
 	
@@ -68,27 +68,27 @@ public class MediaFile implements Serializable {
 			long UUID)
 	{
 		this.artistName= convertToProperty(artistName);
-		this.albumName= new SimpleStringProperty(albumName);
-		this.albumNumber= new SimpleIntegerProperty(albumNumber);
-		this.dateCreated= new SimpleStringProperty(dateCreated);
-		this.dateRecorded= new SimpleStringProperty(dateRecorded);
-		this.songName= new SimpleStringProperty(songName);
-		this.songTime= new SimpleDoubleProperty(songTime);
-		this.filePath= new SimpleStringProperty(filePath);
-		this.genre = new SimpleStringProperty(genre);
+		this.albumName= albumName;
+		this.albumNumber= albumNumber;
+		this.dateCreated= dateCreated;
+		this.dateRecorded= dateRecorded;
+		this.songName= songName;
+		this.songTime= songTime;
+		this.filePath= filePath;
+		this.genre = genre;
 		this.UUID= UUID;
 	}
 	
 	public MediaFile(MediaFileAttribute fileAttribute, long UUID){
 		this.artistName = fileAttribute.getArtists();
-		this.albumName = fileAttribute.getAlbum();
-		this.albumNumber = fileAttribute.getNumber();
-		this.dateCreated = fileAttribute.getDateCreated();
-		this.dateRecorded = fileAttribute.getDateRecorded();
-		this.songName = fileAttribute.getName();
-		this.songTime = fileAttribute.getLength();
-		this.filePath = fileAttribute.getPath();
-		this.genre = fileAttribute.getGenre();
+		this.albumName = fileAttribute.getAlbum().get();
+		this.albumNumber = fileAttribute.getNumber().get();
+		this.dateCreated = fileAttribute.getDateCreated().get();
+		this.dateRecorded = fileAttribute.getDateRecorded().get();
+		this.songName = fileAttribute.getName().get();
+		this.songTime = fileAttribute.getLength().get();
+		this.filePath = fileAttribute.getPath().get();
+		this.genre = fileAttribute.getGenre().get();
 		this.UUID = UUID;
 	}
 	
@@ -109,31 +109,31 @@ public class MediaFile implements Serializable {
 	 * @return the media genre
 	 */
 	public StringProperty getGenreProperty(){
-		return genre;
+		return new SimpleStringProperty(genre);
 	}
 	/**
 	 * @return the genre
 	 */
 	public String getGenre(){
-		return genre.get();
+		return genre;
 	}
 	/**
 	 * @return the song length
 	 */
 	public DoubleProperty getSongLengthProperty(){
-		return songTime;
+		return new SimpleDoubleProperty(songTime);
 	}
 	/**
 	 * @return the filePath
 	 */
 	public String getFilePath() {
-		return filePath.get();
+		return filePath;
 	}
 	/**
 	 * @param filePath the filePath to set
 	 */
 	public void setFilePath(StringProperty filePath) {
-		this.filePath = filePath;
+		this.filePath = filePath.get();
 	}
 	/**
 	 * @return the artistName (List<String>)
@@ -165,91 +165,91 @@ public class MediaFile implements Serializable {
 	 * @return the albumName (String)
 	 */
 	public String getAlbumName() {
-		return albumName.get();
+		return albumName;
 	}
 	/**
 	 * @return the albumName
 	 */
 	public StringProperty getAlbumNameProperty(){
-		return albumName;
+		return new SimpleStringProperty(albumName);
 	}
 	/**
 	 * @param set the albumName to albumName
 	 */
 	public void setAlbumName(StringProperty albumName) {
-		this.albumName = albumName;
+		this.albumName = albumName.get();
 	}
 	/**
 	 * @return the albumNumber (int)
 	 */
 	public int getAlbumNumber() {
-		return albumNumber.get();
+		return albumNumber;
 	}
 	/**
 	 * @return the Album Number
 	 */
 	public IntegerProperty getAlbumNumberProperty(){
-		return albumNumber;
+		return new SimpleIntegerProperty(albumNumber);
 	}
 	/**
 	 * @param set albumNumber to albumNumber
 	 */
 	public void setAlbumNumber(IntegerProperty albumNumber) {
-		this.albumNumber = albumNumber;
+		this.albumNumber = albumNumber.get();
 	}
 	/**
 	 * @return the dateCreated
 	 */
 	public String getDateCreated() {
-		return dateCreated.get();
+		return dateCreated;
 	}
 	/**
 	 * @param set dateCreated to dateCreated
 	 */
 	public void setDateCreated(StringProperty dateCreated) {
-		this.dateCreated = dateCreated;
+		this.dateCreated = dateCreated.get();
 	}
 	/**
 	 * @return the dateRecorded
 	 */
 	public String getDateRecorded() {
-		return dateRecorded.get();
+		return dateRecorded;
 	}
 	/**
 	 * @param set dateRecorded to dateRecorded 
 	 */
 	public void setDateRecorded(StringProperty dateRecorded) {
-		this.dateRecorded = dateRecorded;
+		this.dateRecorded = dateRecorded.get();
 	}
 	/**
 	 * @return the songName
 	 */
 	public String getSongName() {
-		return songName.get();
+		return songName;
 	}
 	/**
 	 * @param set songName to songName 
 	 */
 	public void setSongName(StringProperty songName) {
-		this.songName = songName;
+		this.songName = songName.get();
 	}
 	/**
 	 * @return the songName (StringProperty)
 	 */
 	public StringProperty getSongNameProperty(){
-		return songName;
+		return new SimpleStringProperty(songName);
 	}
 	/**
 	 * @return the songTime
 	 */
 	public double getSongTime() {
-		return songTime.get();
+		return songTime;
 	}
 	/**
 	 * @param set songTime to songTime 
 	 */
 	public void setSongTime(DoubleProperty songTime) {
-		this.songTime = songTime;
+		this.songTime = songTime.get();
 	}
 	/**
 	 * @return the uUID
@@ -259,19 +259,22 @@ public class MediaFile implements Serializable {
 	}
 	
 	public void writeToDisk() throws IOException {
-		FileOutputStream f_out= new FileOutputStream("C:\\Music\\"+ artistName.get(0) + "\\" + albumName.get()+ "\\" + UUID + ".data");
-		ObjectOutputStream obj_out= new ObjectOutputStream(f_out);
+		FileOutputStream f_out = new FileOutputStream("C:\\Music\\"+ artistName.get(0).get().toLowerCase() + "\\" + albumName.toLowerCase() + "\\" + UUID + ".data");
+		ObjectOutputStream obj_out = new ObjectOutputStream(f_out);
 		obj_out.writeObject(this);
 		obj_out.close();
-		f_out.close();
-		
+		f_out.close();	
 	}
 	
 	@Override
 	public String toString() {
-		return "\nArtist Name(s): \n"+artistName.get(0).get()+ "\n\nAlbum Name: \n"+ albumName.get() + 
-				"\nAlbum Number: \n"+albumNumber.get()+"\n\nDate Created: \n" + dateCreated.get()+
-				"\n\nDate Recorded: \n"+dateRecorded.get()+"\n\nSong Name: \n"+ songName.get()
-				+ "\nSong Time: \n"+ songTime.get()+ "\n\nFile Path: \n"+filePath.get();
+		return "Artist Name(s): "+artistName.get(0).get()
+				+ "\nAlbum Name: "+ albumName 
+				+ "\nAlbum Number: "+ albumNumber
+				+ "\nDate Created: " + dateCreated
+				+ "\nDate Recorded: "+ dateRecorded
+				+ "\nSong Name: "+ songName
+				+ "\nSong Time: "+ songTime
+				+ "\nFile Path: "+ filePath;
 	}
 }
