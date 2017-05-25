@@ -1,5 +1,6 @@
 package com.negativevr.media_library;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -84,7 +85,14 @@ public class Main {
 	}
 	
 // private accessors/ mutators
+	public void readToDisk(){
+	for(Map.Entry<Long, MediaFile> entry: masterMediaData.entrySet())
+	{
+		MediaFile file=entry.getValue();
+		File dir = new File("C:\\Music\\"+ file.getArtistName().get(0)+ "\\" + file.getAlbumName()+ "\\" + file.getUUID() + ".data");
+	    dir.mkdir();
+	}
 	
 	
-	
+	}
 }
