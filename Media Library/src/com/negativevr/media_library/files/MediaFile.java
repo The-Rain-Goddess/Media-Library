@@ -266,6 +266,10 @@ public class MediaFile implements Serializable {
 		f_out.close();	
 	}
 	
+	public void readFromFile() throws IOException{
+		
+	}
+	
 	@Override
 	public String toString() {
 		return "Artist Name(s): "+artistName.get(0).get()
