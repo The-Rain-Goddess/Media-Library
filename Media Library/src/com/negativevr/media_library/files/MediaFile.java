@@ -5,10 +5,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
@@ -240,8 +237,7 @@ public class MediaFile implements Serializable {
 		return UUID;
 	}
 	
-	public void writeToDisk() throws IOException
-	{
+	public void writeToDisk() throws IOException {
 		FileOutputStream f_out= new FileOutputStream("C:\\Music\\"+ artistName.get(0) + "\\" + albumName.get()+ "\\" + UUID + ".data");
 		ObjectOutputStream obj_out= new ObjectOutputStream(f_out);
 		obj_out.writeObject(this);
@@ -250,38 +246,14 @@ public class MediaFile implements Serializable {
 	}
 	
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return "\nArtist Name(s): \n"+artistName+ "\n\nAlbum Name: \n"+ albumName + 
 				"\nAlbum Number: \n"+albumNumber+"\n\nDate Created: \n" + dateCreated+
 				"\n\nDate Recorded: \n"+dateRecorded+"\n\nSong Name: \n"+ songName
 				+ "\nSong Time: \n"+ songTime+ "\n\nFile Path: \n"+filePath;
 	}
 		
-	public static void main(String[] args)
-	{
-		List<String> name= new ArrayList<>();
-		name.add("The Killers");
-		MediaFile file = new MediaFile(name, "Kill\n", 4, new Date().toString(),
-				 new Date().toString(), "When You Were Young\n", 3.14, "C:\\", 124L);
-		//System.out.println(file);
-		
-		List<String> name1= new ArrayList<>();
-		name1.add("One Republic");
-		MediaFile file1 = new MediaFile(name1, "Hi\n", 6, new Date().toString(),
-				 new Date().toString(), "All The Right Moves\n", 2.33, "C:\\", 3245L);
-		
-		List<String> name2= new ArrayList<>();
-		name2.add("Stromae");
-		MediaFile file2 = new MediaFile(name2, "Flower\n", 12, new Date().toString(),
-				 new Date().toString(), "Formidable\n", 5.10, "C:\\", 1214L);
-		
-		 Map<Integer, MediaFile> map = new TreeMap<Integer, MediaFile>();  
-		map. put(124, file);
-		map. put(3245, file1);
-		map. put(1214, file2);
-		 
-		System.out.println(map);
+	public static void main(String[] args) {
 		
 	}
 	
