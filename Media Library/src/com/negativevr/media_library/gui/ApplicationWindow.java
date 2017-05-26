@@ -1,11 +1,14 @@
 package com.negativevr.media_library.gui;
 import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.nio.file.FileSystems;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import com.negativevr.media_library.Main;
@@ -109,21 +112,19 @@ public class ApplicationWindow extends Application{
 	    treeBox.setSpacing(10);
 	    
 	  //setup the file browser root
-	    String hostName = "computer";
-	    try{
-	    	hostName = InetAddress.getLocalHost().getHostName();
-	    } catch(UnknownHostException x){
-	    	x.printStackTrace();
-	    }
-	    TreeItem<String> rootNode = new TreeItem<>(hostName,new ImageView(new Image("remove.png")));
+	    Path rootPath = Paths.get("C:\\Music\\");
+	    TreeItem<String> rootNode = new TreeItem<>(rootPath.toAbsolutePath().toString(),new ImageView(new Image("remove.png")));
 	    //ClassLoader.getSystemResourceAsStream("com/huguesjohnson/javafxfilebrowsedemo/computer.png")
-	    Iterable<Path> rootDirectories = FileSystems.getDefault().getRootDirectories();
-	    for(Path name:rootDirectories){
-	      FilePathTreeItem treeNode = new FilePathTreeItem(name);
-	      rootNode.getChildren().add(treeNode);
-	      rootNode.getChildren().addAll(treeNode.getChildren());
+	    //Iterable<Path> rootDirectories = FileSystems.getDefault().getRootDirectories();
+	    Iterable<Path> rootDirectories = getDirectories(rootPath);
+	    
+	    for(Path name : rootDirectories){
+	    	FilePathTreeItem treeNode = new FilePathTreeItem(name);
+	    	
+	    	rootNode.getChildren().add(treeNode);
+	    	treeNode.setExpanded(true);
 	    }
-	    rootNode.setExpanded(true);
+	    
 	    
 	    //create the tree view
 	    TreeView<String> treeView = new TreeView<>(rootNode);
@@ -132,6 +133,17 @@ public class ApplicationWindow extends Application{
 	    VBox.setVgrow(treeView,Priority.ALWAYS);
 	    
 	    return treeBox;
+	}
+	
+	private List<Path> getDirectories(final Path dir) {
+		final List<Path> dirlist = new ArrayList<>();
+		try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
+			for (final Iterator<Path> it = stream.iterator(); it.hasNext();) {
+				dirlist.add(dir.resolve(it.next()));
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} return dirlist;
 	}
 	
 //private Data Table mutators / accessors
