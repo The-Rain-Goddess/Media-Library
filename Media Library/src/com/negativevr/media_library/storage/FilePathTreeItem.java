@@ -68,6 +68,7 @@ public class FilePathTreeItem extends TreeItem<String> {
 					iv.setImage(folderExpandImage);
 				} try {
 					if (source.getChildren().isEmpty()) {
+						System.out.println(file.toAbsolutePath() + " isEmpty");
 						Path path = Paths.get(source.getFullPath());
 						BasicFileAttributes attribs = Files.readAttributes(path, BasicFileAttributes.class);
 						if (attribs.isDirectory()) {
@@ -77,9 +78,9 @@ public class FilePathTreeItem extends TreeItem<String> {
 								source.getChildren().add(treeNode);
 							}
 						}
-					} else {
-						// if you want to implement rescanning a directory for
-						// changes this would be the place to do it
+					} else if(!source.getChildren().contains(this) && !isDirectory){
+						System.out.println(file.toAbsolutePath() +" isNotEmpty");
+						
 					}
 				} catch (IOException x) {
 					x.printStackTrace();
@@ -97,6 +98,10 @@ public class FilePathTreeItem extends TreeItem<String> {
 				}
 			}
 		});
+	}
+	
+	public void addChangeListener(){
+		
 	}
 	
 	@Override
