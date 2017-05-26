@@ -1,7 +1,11 @@
 package com.negativevr.media_library.files;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -263,13 +267,27 @@ public class MediaFile implements Serializable {
 		ObjectOutputStream obj_out = new ObjectOutputStream(f_out);
 		obj_out.writeObject(this);
 		obj_out.close();
-		f_out.close();	
+		f_out.close();		
 	}
 	
+	/////////////////////////////////////////
 	public void readFromFile() throws IOException{
-		
+	
 	}
 	
+	private File[] find() {
+	File file = new File("C:\\Music\\"+ artistName.get(0).get().toLowerCase() + "\\" + albumName.toLowerCase() + "\\" + UUID + ".data"); 
+	File[] files = null;
+		if (file.exists()) { 
+			files = file.listFiles(new FilenameFilter(){
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.toLowerCase().endsWith(".data");
+				}
+			});
+		} return files;
+	}
+/////////////////////////////////////////////////////////////////
 	@Override
 	public String toString() {
 		return "Artist Name(s): "+artistName.get(0).get()
