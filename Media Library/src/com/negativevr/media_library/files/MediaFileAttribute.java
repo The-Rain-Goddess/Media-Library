@@ -13,8 +13,8 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
 public class MediaFileAttribute {
-	private StringProperty name, album, dateCreated, dateRecorded, path, genre;
-	private List<StringProperty> artists;
+	private StringProperty name, album, dateCreated, dateRecorded, path, genre, artist;
+	//private List<StringProperty> artists;
 	private IntegerProperty number;
 	private DoubleProperty length;
 	private IntegerProperty plays;
@@ -27,7 +27,7 @@ public class MediaFileAttribute {
 		this.dateRecorded = new SimpleStringProperty("");
 		this.path = new SimpleStringProperty("C:\\");
 		this.genre = new SimpleStringProperty("");
-		this.artists = Arrays.asList(new SimpleStringProperty(""));
+		this.artist = new SimpleStringProperty("");
 		this.number = new SimpleIntegerProperty(0);
 		this.plays = new SimpleIntegerProperty(0);
 		this.length = new SimpleDoubleProperty(0.0);
@@ -79,8 +79,8 @@ public class MediaFileAttribute {
 	/**
 	 * @return the artists
 	 */
-	public List<StringProperty> getArtists() {
-		return artists;
+	public StringProperty getArtists() {
+		return artist;
 	}
 
 	/**
@@ -217,8 +217,8 @@ public class MediaFileAttribute {
 	 * @param artists
 	 *            the artists to set
 	 */
-	public MediaFileAttribute setArtists(List<StringProperty> artists) {
-		this.artists = artists;
+	public MediaFileAttribute setArtists(StringProperty artist) {
+		this.artist = artist;
 		return this;
 	}
 	
@@ -226,11 +226,8 @@ public class MediaFileAttribute {
 	 * @param artists
 	 *            the artists to set
 	 */
-	public MediaFileAttribute setArtistStrings(List<String> artists) {
-		List<StringProperty> list = new ArrayList<>();
-		for(String s : artists){
-			list.add(new SimpleStringProperty(s));
-		} this.artists = list;
+	public MediaFileAttribute setArtistStrings(String artist) {
+		this.artist = new SimpleStringProperty(artist);
 		return this;
 	}
 

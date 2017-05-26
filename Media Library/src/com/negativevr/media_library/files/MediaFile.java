@@ -24,9 +24,9 @@ public class MediaFile implements Serializable {
 	 *
 	 */
 	private static final long serialVersionUID = -5898952383948456405L;
-	private final long UUID;
+	private long UUID;
 
-	private transient List<StringProperty> artistName;
+	private String artistName;
 	private String albumName;
 	private int albumNumber;
 	private String dateCreated;
@@ -37,7 +37,7 @@ public class MediaFile implements Serializable {
 	private String genre;
 
 //constructors
-	public MediaFile(List<StringProperty> artistName, 
+	public MediaFile(StringProperty artistName, 
 			StringProperty albumName,
 			IntegerProperty albumNumber,
 			StringProperty dateCreated,
@@ -48,7 +48,7 @@ public class MediaFile implements Serializable {
 			StringProperty genre,
 			long UUID)
 	{
-		this.artistName= artistName;
+		this.artistName= artistName.get();
 		this.albumName= albumName.get();
 		this.albumNumber= albumNumber.get();
 		this.dateCreated= dateCreated.get();
@@ -60,7 +60,7 @@ public class MediaFile implements Serializable {
 		this.UUID= UUID;
 	}
 	
-	public MediaFile(List<String> artistName, 
+	public MediaFile(String artistName, 
 			String albumName,
 			int albumNumber,
 			String dateCreated,
@@ -71,7 +71,7 @@ public class MediaFile implements Serializable {
 			String genre,
 			long UUID)
 	{
-		this.artistName= convertToProperty(artistName);
+		this.artistName= artistName;
 		this.albumName= albumName;
 		this.albumNumber= albumNumber;
 		this.dateCreated= dateCreated;
@@ -84,7 +84,7 @@ public class MediaFile implements Serializable {
 	}
 	
 	public MediaFile(MediaFileAttribute fileAttribute, long UUID){
-		this.artistName = fileAttribute.getArtists();
+		this.artistName = fileAttribute.getArtists().get();
 		this.albumName = fileAttribute.getAlbum().get();
 		this.albumNumber = fileAttribute.getNumber().get();
 		this.dateCreated = fileAttribute.getDateCreated().get();
@@ -142,27 +142,19 @@ public class MediaFile implements Serializable {
 	/**
 	 * @return the artistName (List<String>)
 	 */
-	public List<String> getArtistName() {
-		List<String> list = new ArrayList<>();
-		for(StringProperty s : this.artistName)
-			list.add(s.get());
-		return list;
+	public String getArtistName() {
+		return this.artistName;
 	}
 	/**
 	 * @return the artistName
 	 */
 	public StringProperty getArtistNameProperty(){
-		String out = "";
-		for(StringProperty t : artistName){
-			out += (out.equals("")) ? out + t.get() : out + " " + t.get();
-		}
-		StringProperty s = new SimpleStringProperty(out); 
-		return s;
+		return new SimpleStringProperty(artistName);
 	}
 	/**
 	 * @param set the artistName to artistName
 	 */
-	public void setArtistName(List<StringProperty> artistName) {
+	public void setArtistName(String artistName) {
 		this.artistName = artistName;
 	}
 	/**
@@ -263,7 +255,7 @@ public class MediaFile implements Serializable {
 	}
 	
 	public void writeToDisk() throws IOException {
-		FileOutputStream f_out = new FileOutputStream("C:\\Music\\"+ artistName.get(0).get().toLowerCase() + "\\" + albumName.toLowerCase() + "\\" + UUID + ".data");
+		FileOutputStream f_out = new FileOutputStream("C:\\Music\\"+ artistName.toLowerCase() + "\\" + albumName.toLowerCase() + "\\" + UUID + ".data");
 		ObjectOutputStream obj_out = new ObjectOutputStream(f_out);
 		obj_out.writeObject(this);
 		obj_out.close();
@@ -275,22 +267,9 @@ public class MediaFile implements Serializable {
 	
 	}
 	
-	private File[] find() {
-	File file = new File("C:\\Music\\"+ artistName.get(0).get().toLowerCase() + "\\" + albumName.toLowerCase() + "\\" + UUID + ".data"); 
-	File[] files = null;
-		if (file.exists()) { 
-			files = file.listFiles(new FilenameFilter(){
-				@Override
-				public boolean accept(File dir, String name) {
-					return name.toLowerCase().endsWith(".data");
-				}
-			});
-		} return files;
-	}
-/////////////////////////////////////////////////////////////////
 	@Override
 	public String toString() {
-		return "Artist Name(s): "+artistName.get(0).get()
+		return "Artist Name(s): "+ artistName
 				+ "\nAlbum Name: "+ albumName 
 				+ "\nAlbum Number: "+ albumNumber
 				+ "\nDate Created: " + dateCreated
@@ -298,5 +277,10 @@ public class MediaFile implements Serializable {
 				+ "\nSong Name: "+ songName
 				+ "\nSong Time: "+ songTime
 				+ "\nFile Path: "+ filePath;
+	}
+
+	public void setUUID(long nextUUID) {
+		this.UUID=nextUUID;
+		
 	}
 }
