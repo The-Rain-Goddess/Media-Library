@@ -17,6 +17,9 @@ import com.negativevr.media_library.files.MediaFileAttribute;
 import com.negativevr.media_library.storage.FilePathTreeItem;
 
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
+import javafx.beans.Observable;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -25,7 +28,6 @@ import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Control;
@@ -33,6 +35,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -43,17 +46,28 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaPlayer.Status;
+import javafx.scene.media.MediaView;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class ApplicationWindow extends Application{
 
 	private final double WINDOW_MIN_WIDTH = 900;
-	private final double WINDOW_MIN_HEIGHT = 800;
+	private final double WINDOW_MIN_HEIGHT = 600;
 	private TextField search;
 	private TableView<MediaFile> dataTable;
+	private MediaPlayer player;
+	private Slider slider;
+	private Duration duration;
+	private Label time;
 
 //constructor	
 	public ApplicationWindow() {
@@ -70,15 +84,7 @@ public class ApplicationWindow extends Application{
 		AnchorPane componentWindow = new AnchorPane();
 		VBox componentLayout = new VBox();
 		BorderPane tableDisplay = new BorderPane();
-		
-		//sets up searchbox
-		GridPane searchBox = new GridPane();
-		searchBox.setAlignment(Pos.TOP_RIGHT);
 		search = new TextField();
-		GridPane.setConstraints(search, 0,1);
-		GridPane.setMargin(search, new Insets(5,5,5,5));
-		Label dataSearchLabel = new Label("Search: ");
-		GridPane.setConstraints(dataSearchLabel, 0,0);
 		
 		//set main window size
 		componentWindow.setMinHeight(WINDOW_MIN_HEIGHT);
@@ -87,14 +93,13 @@ public class ApplicationWindow extends Application{
         //Create the scene and add the parent container to it
         Scene scene = new Scene(componentWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT);
         
-        //align Search box
-        searchBox.getChildren().addAll(dataSearchLabel, search);
-        BorderPane.setAlignment(searchBox, Pos.TOP_RIGHT);
-        tableDisplay.setTop(searchBox);
-        
         //align dataTable
+        //tableDisplay.setTop(searchBox);
         tableDisplay.setRight(setupMediaDataTable());
         tableDisplay.setLeft(setupMediaFileBrowser());
+        tableDisplay.setTop(setupMediaPlayer());;
+        VBox.setMargin(tableDisplay, new Insets(10,10,10,10));
+        tableDisplay.setPrefSize(800,400);
         componentLayout.getChildren().addAll(setupMenuBar(), tableDisplay);
         
         //add componentLayout to Window
@@ -105,6 +110,101 @@ public class ApplicationWindow extends Application{
         rootStage.show();
 	}
 	
+//private Media Player accessors / mutators
+	private HBox setupMediaPlayer(){
+		HBox mediaSlot = new HBox();
+		Path path = Paths.get("Q:\\Documents\\Music\\Imagine Dragons - Believer.mp3");
+		Media media = new Media(path.toFile().toURI().toString());
+		player = new MediaPlayer(media);
+		player.setAutoPlay(true);
+		MediaView mediaView = new MediaView();
+		mediaView.setMediaPlayer(player);
+		//play button
+		Button playButton = new Button("Play/Pause");
+		Image PlayButtonImage = new Image("add.png");
+		Image PauseButtonImage = new Image("remove.png");
+		ImageView imageViewPlay = new ImageView(PlayButtonImage);
+		ImageView imageViewPause = new ImageView(PauseButtonImage);
+		
+		playButton.setGraphic(imageViewPlay);
+		playButton.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				updateValues();
+				Status status = player.getStatus();
+	
+				if (status == Status.PAUSED
+				|| status == Status.READY
+				|| status == Status.STOPPED) {
+					player.play();
+					playButton.setGraphic(imageViewPlay);
+				} else {
+					player.pause();
+					playButton.setGraphic(imageViewPause);
+				}
+			}
+		});
+		
+		Button reload = new Button("Reload");
+		reload.setOnAction((ActionEvent e) -> {
+			player.seek(player.getStartTime());
+		});
+		
+		slider = new Slider();
+		HBox.setHgrow(slider, Priority.ALWAYS);
+		slider.setMinSize(100, 50);
+
+		slider.valueProperty().addListener(new InvalidationListener() {
+			@Override
+			public void invalidated(Observable ov) {
+				if (slider.isValueChanging()) {
+					// multiply duration by percentage calculated by slider position
+					Duration duration = player.getCurrentTime();
+					if (duration != null) {
+						player.seek(duration.multiply(slider.getValue() / 100.0));
+					}
+					updateValues();
+	
+				}
+			}
+		});
+
+		player.currentTimeProperty().addListener(new ChangeListener<Duration>() {
+			@Override
+			public void changed(ObservableValue<? extends Duration> arg0, Duration arg1, Duration arg2) {
+				updateValues();
+			}
+		});
+		
+		time = new Label();
+		time.setTextFill(Color.YELLOW);
+		
+		player.setOnReady(() -> {
+			duration = player.getMedia().getDuration();
+			updateValues();
+		});
+		
+		mediaSlot.getChildren().addAll(playButton,reload, slider,time,mediaView, new Label("Search"), search);
+		return mediaSlot;
+	}
+	
+	private void updateValues() {
+		if (time != null && slider != null && duration != null) {
+			Platform.runLater(new Runnable() {
+				@SuppressWarnings("deprecation")
+				@Override
+				public void run() {
+					Duration currentTime = player.getCurrentTime();
+					time.setText("");//formatTime(currentTime, duration));
+					slider.setDisable(duration.isUnknown());
+					if (!slider.isDisabled() && duration.greaterThan(Duration.ZERO) && !slider.isValueChanging()) {
+						slider.setValue(currentTime.divide(duration).toMillis() * 100.0);
+					}
+				}
+			});
+		}
+	}
+	
 //private File Browser mutators / accessors
 	private VBox setupMediaFileBrowser(){
 		VBox treeBox = new VBox();
@@ -113,18 +213,25 @@ public class ApplicationWindow extends Application{
 	    
 	  //setup the file browser root
 	    Path rootPath = Paths.get("C:\\Music\\");
-	    TreeItem<String> rootNode = new TreeItem<>(rootPath.toAbsolutePath().toString(),new ImageView(new Image("remove.png")));
-	    //ClassLoader.getSystemResourceAsStream("com/huguesjohnson/javafxfilebrowsedemo/computer.png")
+	    final TreeItem<String> rootNode = new TreeItem<>(rootPath.toAbsolutePath().toString(),new ImageView(new Image("remove.png")));
+	    //ClassLoader.getSystemResourceAsStream("com/computer.png")
 	    //Iterable<Path> rootDirectories = FileSystems.getDefault().getRootDirectories();
 	    Iterable<Path> rootDirectories = getDirectories(rootPath);
 	    
 	    for(Path name : rootDirectories){
 	    	FilePathTreeItem treeNode = new FilePathTreeItem(name);
-	    	
 	    	rootNode.getChildren().add(treeNode);
-	    	treeNode.setExpanded(true);
-	    }
+	    	//treeNode.setExpanded(true);
+	    } rootNode.setExpanded(true);
 	    
+	    /*
+	    rootNode.addEventHandler(TreeItem.childrenModificationEvent(), new EventHandler<TreeItem.TreeModificationEvent<String>>(){
+			@Override
+			public void handle(TreeModificationEvent<String> e) {
+				//updateFileSystem(rootPath, rootNode);
+				//System.out.println("Waht");
+			}
+	    });*/
 	    
 	    //create the tree view
 	    TreeView<String> treeView = new TreeView<>(rootNode);
@@ -133,6 +240,17 @@ public class ApplicationWindow extends Application{
 	    VBox.setVgrow(treeView,Priority.ALWAYS);
 	    
 	    return treeBox;
+	}
+	
+	private void updateFileSystem(final Path rootPath, final TreeItem<String> root){ 
+		root.getChildren().clear();
+		Iterable<Path> rootDirectories = getDirectories(rootPath);
+	    
+	    for(Path name : rootDirectories){
+	    	FilePathTreeItem treeNode = new FilePathTreeItem(name);
+	    	root.getChildren().add(treeNode);
+	    	//treeNode.setExpanded(true);
+	    } root.setExpanded(true);
 	}
 	
 	private List<Path> getDirectories(final Path dir) {
@@ -150,8 +268,9 @@ public class ApplicationWindow extends Application{
 	private TableView<MediaFile> setupMediaDataTable(){
 		dataTable = new TableView<MediaFile>();
 		dataTable.setId("Data Table");
-		dataTable.setMinHeight(WINDOW_MIN_HEIGHT);
+		dataTable.setMinHeight(WINDOW_MIN_HEIGHT - 100);
 		dataTable.setMinWidth(2*WINDOW_MIN_WIDTH/3);
+		BorderPane.setMargin(dataTable, new Insets(10,10,10,10));
 		
 		//initialize the columns
 		dataTable.getColumns().setAll(getDataTableColumns());
