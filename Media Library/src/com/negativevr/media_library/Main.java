@@ -109,7 +109,8 @@ public class Main {
 					if(albumDir.get(i).isDirectory()){
 						List<File> songDir = Arrays.asList(albumDir.get(i).listFiles());
 						for(int j = 0; j<songDir.size(); j++)
-							allSongs.add(songDir.get(j));
+							if(songDir.get(j).getAbsolutePath().contains(".data"))
+								allSongs.add(songDir.get(j));
 						
 					}
 				}
