@@ -16,10 +16,14 @@ import com.negativevr.media_library.files.MediaFile;
 import com.negativevr.media_library.files.MediaFileAttribute;
 import com.negativevr.media_library.storage.FilePathTreeItem;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -28,6 +32,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Control;
@@ -60,14 +65,16 @@ import javafx.util.Duration;
 
 public class ApplicationWindow extends Application{
 
-	private final double WINDOW_MIN_WIDTH = 900;
+	private final double WINDOW_MIN_WIDTH = 1200;
 	private final double WINDOW_MIN_HEIGHT = 600;
 	private TextField search;
 	private TableView<MediaFile> dataTable;
 	private MediaPlayer player;
-	private Slider slider;
+	private Slider timeSlider;
 	private Duration duration;
 	private Label time;
+	
+	private static final Duration FADE_DURATION = Duration.seconds(2.0);
 
 //constructor	
 	public ApplicationWindow() {
@@ -113,16 +120,17 @@ public class ApplicationWindow extends Application{
 //private Media Player accessors / mutators
 	private HBox setupMediaPlayer(){
 		HBox mediaSlot = new HBox();
+		HBox timeControls = new HBox();
 		Path path = Paths.get("Q:\\Documents\\Music\\Imagine Dragons - Believer.mp3");
 		Media media = new Media(path.toFile().toURI().toString());
 		player = new MediaPlayer(media);
-		player.setAutoPlay(true);
+		//player.setAutoPlay(true);
 		MediaView mediaView = new MediaView();
 		mediaView.setMediaPlayer(player);
 		//play button
-		Button playButton = new Button("Play/Pause");
-		Image PlayButtonImage = new Image("add.png");
-		Image PauseButtonImage = new Image("remove.png");
+		Button playButton = new Button();
+		Image PlayButtonImage = new Image("play.png");
+		Image PauseButtonImage = new Image("pause.png");
 		ImageView imageViewPlay = new ImageView(PlayButtonImage);
 		ImageView imageViewPause = new ImageView(PauseButtonImage);
 		
@@ -135,33 +143,44 @@ public class ApplicationWindow extends Application{
 	
 				if (status == Status.PAUSED
 				|| status == Status.READY
+				|| status == Status.UNKNOWN
 				|| status == Status.STOPPED) {
 					player.play();
-					playButton.setGraphic(imageViewPlay);
+					playButton.setGraphic(imageViewPause);
 				} else {
 					player.pause();
-					playButton.setGraphic(imageViewPause);
+					playButton.setGraphic(imageViewPlay);
 				}
 			}
 		});
 		
-		Button reload = new Button("Reload");
+		Button reload = new Button();
+		reload.setGraphic(new ImageView(new Image("reload.png")));
 		reload.setOnAction((ActionEvent e) -> {
 			player.seek(player.getStartTime());
 		});
 		
-		slider = new Slider();
-		HBox.setHgrow(slider, Priority.ALWAYS);
-		slider.setMinSize(100, 50);
+		Button skip = new Button();
+		skip.setGraphic((new ImageView(new Image("skip.png"))));
+		
+		Button previous = new Button();
+		previous.setGraphic(new ImageView(new Image("previous.png")));
+		
+		Button next = new Button();
+		next.setGraphic(new ImageView(new Image("next.png")));
+		
+		timeSlider = new Slider();
+		HBox.setHgrow(timeSlider, Priority.ALWAYS);
+		timeSlider.setMinSize(100, 50);
 
-		slider.valueProperty().addListener(new InvalidationListener() {
+		timeSlider.valueProperty().addListener(new InvalidationListener() {
 			@Override
 			public void invalidated(Observable ov) {
-				if (slider.isValueChanging()) {
+				if (timeSlider.isValueChanging()) {
 					// multiply duration by percentage calculated by slider position
 					Duration duration = player.getCurrentTime();
 					if (duration != null) {
-						player.seek(duration.multiply(slider.getValue() / 100.0));
+						player.seek(duration.multiply(timeSlider.getValue() / 100.0));
 					}
 					updateValues();
 	
@@ -177,28 +196,125 @@ public class ApplicationWindow extends Application{
 		});
 		
 		time = new Label();
-		time.setTextFill(Color.YELLOW);
+		time.setTextFill(Color.BLACK);
 		
 		player.setOnReady(() -> {
 			duration = player.getMedia().getDuration();
 			updateValues();
 		});
 		
-		mediaSlot.getChildren().addAll(playButton,reload, slider,time,mediaView, new Label("Search"), search);
+		//volume control slider
+		final Slider volumeSlider = new Slider(0, 1, 0);
+	    player.volumeProperty().bindBidirectional(volumeSlider.valueProperty());
+	    player.setVolume(0.5);
+
+	    //fade in time line
+	    final Timeline fadeInTimeline = new Timeline(
+	      new KeyFrame(
+	        FADE_DURATION,
+	        new KeyValue(player.volumeProperty(), 1.0)
+	      )
+	    );
+	    
+	    //fade out timeline
+	    final Timeline fadeOutTimeline = new Timeline(
+	      new KeyFrame(
+	        FADE_DURATION,
+	        new KeyValue(player.volumeProperty(), 0.0)
+	      )
+	    );
+
+	    //fade in button
+	    Button fadeIn = new Button("Fade In");
+	    fadeIn.setOnAction(new EventHandler<ActionEvent>() {
+	      @Override public void handle(ActionEvent t) {
+	        fadeInTimeline.play();
+	      }
+	    });
+	    fadeIn.setMaxWidth(Double.MAX_VALUE);
+	    
+	    //fade out button
+	    Button fadeOut = new Button("Fade Out");
+	    fadeOut.setOnAction(new EventHandler<ActionEvent>() {
+	      @Override public void handle(ActionEvent t) {
+	        fadeOutTimeline.play();
+	      }
+	    });
+	    fadeOut.setMaxWidth(Double.MAX_VALUE);
+	    
+	    //volume cotrol box
+	    HBox volumeControls = new HBox(5);
+	    volumeControls.getChildren().setAll(
+	      volumeSlider,
+	      fadeIn,
+	      fadeOut
+	    );
+	    volumeControls.setAlignment(Pos.CENTER);
+
+	    volumeControls.disableProperty().bind(
+	      Bindings.or(
+	        Bindings.equal(Timeline.Status.RUNNING, fadeInTimeline.statusProperty()),
+	        Bindings.equal(Timeline.Status.RUNNING, fadeOutTimeline.statusProperty())
+	      )
+	    );
+	    
+	    timeControls.getChildren().addAll(time);
+	    timeControls.setAlignment(Pos.CENTER);
+		
+		mediaSlot.getChildren().addAll(previous,reload, playButton, skip, next, timeControls, timeSlider, volumeControls, mediaView, new Label("Search"), search);
 		return mediaSlot;
 	}
 	
+	private static String formatTime(Duration elapsed, Duration duration) {
+		   int intElapsed = (int)Math.floor(elapsed.toSeconds());
+		   int elapsedHours = intElapsed / (60 * 60);
+		   if (elapsedHours > 0) {
+		       intElapsed -= elapsedHours * 60 * 60;
+		   }
+		   int elapsedMinutes = intElapsed / 60;
+		   int elapsedSeconds = intElapsed - elapsedHours * 60 * 60 
+		                           - elapsedMinutes * 60;
+		 
+		   if (duration.greaterThan(Duration.ZERO)) {
+		      int intDuration = (int)Math.floor(duration.toSeconds());
+		      int durationHours = intDuration / (60 * 60);
+		      if (durationHours > 0) {
+		         intDuration -= durationHours * 60 * 60;
+		      }
+		      int durationMinutes = intDuration / 60;
+		      int durationSeconds = intDuration - durationHours * 60 * 60 - 
+		          durationMinutes * 60;
+		      if (durationHours > 0) {
+		         return String.format("%d:%02d:%02d/%d:%02d:%02d", 
+		            elapsedHours, elapsedMinutes, elapsedSeconds,
+		            durationHours, durationMinutes, durationSeconds);
+		      } else {
+		          return String.format("%02d:%02d/%02d:%02d",
+		            elapsedMinutes, elapsedSeconds,durationMinutes, 
+		                durationSeconds);
+		      }
+		      } else {
+		          if (elapsedHours > 0) {
+		             return String.format("%d:%02d:%02d", elapsedHours, 
+		                    elapsedMinutes, elapsedSeconds);
+		            } else {
+		                return String.format("%02d:%02d",elapsedMinutes, 
+		                    elapsedSeconds);
+		            }
+		        }
+		    }
+	
 	private void updateValues() {
-		if (time != null && slider != null && duration != null) {
+		if (time != null && timeSlider != null && duration != null) {
 			Platform.runLater(new Runnable() {
 				@SuppressWarnings("deprecation")
 				@Override
 				public void run() {
 					Duration currentTime = player.getCurrentTime();
-					time.setText("");//formatTime(currentTime, duration));
-					slider.setDisable(duration.isUnknown());
-					if (!slider.isDisabled() && duration.greaterThan(Duration.ZERO) && !slider.isValueChanging()) {
-						slider.setValue(currentTime.divide(duration).toMillis() * 100.0);
+					time.setText(formatTime(currentTime, duration));
+					timeSlider.setDisable(duration.isUnknown());
+					if (!timeSlider.isDisabled() && duration.greaterThan(Duration.ZERO) && !timeSlider.isValueChanging()) {
+						timeSlider.setValue(currentTime.divide(duration).toMillis() * 100.0);
 					}
 				}
 			});
@@ -527,7 +643,7 @@ public class ApplicationWindow extends Application{
                 	MediaFile newFile = new MediaFile(new MediaFileAttribute()
                 					.setAlbum(albumName.textProperty())
                 					.setName(songName.textProperty())
-                					.setArtistStrings(Arrays.asList(artistNames.textProperty().getValue().split("; ")))
+                					.setArtists(artistNames.textProperty())
                 					.setGenre(genre.textProperty())
                 					.setDateCreated(new Date().toString())
                 					.setNumber(Integer.parseInt(albumNumber.textProperty().getValue().replace("", "0")))
