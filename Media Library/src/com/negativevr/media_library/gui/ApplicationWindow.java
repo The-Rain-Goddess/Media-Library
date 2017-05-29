@@ -48,6 +48,7 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
@@ -76,9 +77,10 @@ public class ApplicationWindow extends Application{
 	private TextField search;
 	private TableView<MediaFile> dataTable;
 	private MediaPlayer player;
-	private Slider timeSlider;
+	private Slider timeSlider, volumeSlider;
 	private Duration duration;
 	private Label time;
+	private Button fadeIn, fadeOut, play, reload, skip, next, previous;
 	
 	private static final Duration FADE_DURATION = Duration.seconds(2.0);
 
@@ -127,21 +129,25 @@ public class ApplicationWindow extends Application{
 	private HBox setupMediaPlayer(){
 		HBox mediaSlot = new HBox();
 		HBox timeControls = new HBox();
-		Path path = Paths.get("Q:\\Documents\\Music\\Imagine Dragons - Believer.mp3");
-		Media media = new Media(path.toFile().toURI().toString());
-		player = new MediaPlayer(media);
+		if(Main.getMasterDataAsList().size()!=0){
+			Path path = Paths.get(Main.getMasterDataAsList().get(0).getFilePath());
+			Media media = new Media(path.toFile().toURI().toString());
+			player = new MediaPlayer(media);
+		} else{
+			player = new MediaPlayer(new Media(Paths.get("init.mp3").toFile().toURI().toString()));
+		}
+		
 		//player.setAutoPlay(true);
 		MediaView mediaView = new MediaView();
 		mediaView.setMediaPlayer(player);
-		//play button
-		Button playButton = new Button();
 		Image PlayButtonImage = new Image("play.png");
 		Image PauseButtonImage = new Image("pause.png");
 		ImageView imageViewPlay = new ImageView(PlayButtonImage);
 		ImageView imageViewPause = new ImageView(PauseButtonImage);
 		
-		playButton.setGraphic(imageViewPlay);
-		playButton.setOnAction(new EventHandler<ActionEvent>() {
+		play = new Button();
+		play.setGraphic(imageViewPlay);
+		play.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent e) {
 				updateValues();
@@ -152,27 +158,27 @@ public class ApplicationWindow extends Application{
 				|| status == Status.UNKNOWN
 				|| status == Status.STOPPED) {
 					player.play();
-					playButton.setGraphic(imageViewPause);
+					play.setGraphic(imageViewPause);
 				} else {
 					player.pause();
-					playButton.setGraphic(imageViewPlay);
+					play.setGraphic(imageViewPlay);
 				}
 			}
 		});
 		
-		Button reload = new Button();
+		reload = new Button();
 		reload.setGraphic(new ImageView(new Image("reload.png")));
 		reload.setOnAction((ActionEvent e) -> {
 			player.seek(player.getStartTime());
 		});
 		
-		Button skip = new Button();
+		skip = new Button();
 		skip.setGraphic((new ImageView(new Image("skip.png"))));
 		
-		Button previous = new Button();
+		previous = new Button();
 		previous.setGraphic(new ImageView(new Image("previous.png")));
 		
-		Button next = new Button();
+		next = new Button();
 		next.setGraphic(new ImageView(new Image("next.png")));
 		
 		timeSlider = new Slider();
@@ -210,7 +216,7 @@ public class ApplicationWindow extends Application{
 		});
 		
 		//volume control slider
-		final Slider volumeSlider = new Slider(0, 1, 0);
+		volumeSlider = new Slider(0, 1, 0);
 	    player.volumeProperty().bindBidirectional(volumeSlider.valueProperty());
 	    player.setVolume(0.5);
 
@@ -231,7 +237,7 @@ public class ApplicationWindow extends Application{
 	    );
 
 	    //fade in button
-	    Button fadeIn = new Button("Fade In");
+	    fadeIn = new Button("Fade In");
 	    fadeIn.setOnAction(new EventHandler<ActionEvent>() {
 	      @Override public void handle(ActionEvent t) {
 	        fadeInTimeline.play();
@@ -240,7 +246,7 @@ public class ApplicationWindow extends Application{
 	    fadeIn.setMaxWidth(Double.MAX_VALUE);
 	    
 	    //fade out button
-	    Button fadeOut = new Button("Fade Out");
+	    fadeOut = new Button("Fade Out");
 	    fadeOut.setOnAction(new EventHandler<ActionEvent>() {
 	      @Override public void handle(ActionEvent t) {
 	        fadeOutTimeline.play();
@@ -267,8 +273,102 @@ public class ApplicationWindow extends Application{
 	    timeControls.getChildren().addAll(time);
 	    timeControls.setAlignment(Pos.CENTER);
 		
-		mediaSlot.getChildren().addAll(previous,reload, playButton, skip, next, timeControls, timeSlider, volumeControls, mediaView, new Label("Search"), search);
+		mediaSlot.getChildren().addAll(previous,reload, play, skip, next, timeControls, timeSlider, volumeControls, mediaView, new Label("Search"), search);
 		return mediaSlot;
+	}
+	
+	private void updatePlayer(){
+		timeSlider.valueProperty().addListener(new InvalidationListener() {
+			@Override
+			public void invalidated(Observable ov) {
+				if (timeSlider.isValueChanging()) {
+					// multiply duration by percentage calculated by slider position
+					Duration duration = player.getCurrentTime();
+					if (duration != null) {
+						player.seek(duration.multiply(timeSlider.getValue() / 100.0));
+					}
+					updateValues();
+	
+				}
+			}
+		});
+		
+		player.setOnReady(() -> {
+			duration = player.getMedia().getDuration();
+			updateValues();
+		});
+		
+		player.currentTimeProperty().addListener(new ChangeListener<Duration>() {
+			@Override
+			public void changed(ObservableValue<? extends Duration> arg0, Duration arg1, Duration arg2) {
+				updateValues();
+			}
+		});
+		
+		player.volumeProperty().bindBidirectional(volumeSlider.valueProperty());
+		
+		Image PlayButtonImage = new Image("play.png");
+		Image PauseButtonImage = new Image("pause.png");
+		ImageView imageViewPlay = new ImageView(PlayButtonImage);
+		ImageView imageViewPause = new ImageView(PauseButtonImage);
+		
+		play.setGraphic(imageViewPause);
+		play.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				updateValues();
+				Status status = player.getStatus();
+	
+				if (status == Status.PAUSED
+				|| status == Status.READY
+				|| status == Status.UNKNOWN
+				|| status == Status.STOPPED) {
+					player.play();
+					play.setGraphic(imageViewPause);
+				} else {
+					player.pause();
+					play.setGraphic(imageViewPlay);
+				}
+			}
+		});
+		
+		reload.setOnAction((ActionEvent e) -> {
+			player.seek(player.getStartTime());
+		});
+		
+		//fade in time line
+	    final Timeline fadeInTimeline = new Timeline(
+	      new KeyFrame(
+	        FADE_DURATION,
+	        new KeyValue(player.volumeProperty(), 1.0)
+	      )
+	    );
+	    
+	    //fade out timeline
+	    final Timeline fadeOutTimeline = new Timeline(
+	      new KeyFrame(
+	        FADE_DURATION,
+	        new KeyValue(player.volumeProperty(), 0.0)
+	      )
+	    );
+		
+		 //fade in button
+	    fadeIn = new Button("Fade In");
+	    fadeIn.setOnAction(new EventHandler<ActionEvent>() {
+	      @Override public void handle(ActionEvent t) {
+	        fadeInTimeline.play();
+	      }
+	    });
+	    fadeIn.setMaxWidth(Double.MAX_VALUE);
+	    
+	    //fade out button
+	    fadeOut = new Button("Fade Out");
+	    fadeOut.setOnAction(new EventHandler<ActionEvent>() {
+	      @Override public void handle(ActionEvent t) {
+	        fadeOutTimeline.play();
+	      }
+	    });
+	    fadeOut.setMaxWidth(Double.MAX_VALUE);
 	}
 	
 	private static String formatTime(Duration elapsed, Duration duration) {
@@ -403,10 +503,34 @@ public class ApplicationWindow extends Application{
 		// Bind the SortedList comparator to the TableView comparator
 		sortedData.comparatorProperty().bind(dataTable.comparatorProperty());
 		
+		//set click event henadling
+		setDataTableClickEvents();
+		
 		// Show the Data
 		dataTable.setItems(sortedData);
 		
 		return dataTable;
+	}
+	
+	private void setDataTableClickEvents(){
+		dataTable.setRowFactory(tv -> {
+			TableRow<MediaFile> row = new TableRow<>();
+			row.setOnMouseClicked(event -> {
+				if(event.getClickCount() == 1){
+					System.out.println("Clicked");
+					System.out.println(row.getItem());
+				} else if(event.getClickCount() == 2){
+					System.out.println("Playing: \n" + row.getItem());
+					File mediaFile = new File(row.getItem().getFilePath());
+					Media mediaToPlay = new Media(mediaFile.toURI().toString());
+					player.stop();
+					player = new MediaPlayer(mediaToPlay);
+					player.setAutoPlay(true);
+					updatePlayer();
+				}
+			});
+			return row;
+		});
 	}
 	
 	private SortedList<MediaFile> getSortedData(){
@@ -449,6 +573,9 @@ public class ApplicationWindow extends Application{
 		
 		// Bind the SortedList comparator to the TableView comparator
 		sortedData.comparatorProperty().bind(dataTable.comparatorProperty());
+		
+		//set click events handling
+		setDataTableClickEvents();
 		
 		// Show the Data
 		dataTable.setItems(sortedData);
