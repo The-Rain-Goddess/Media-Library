@@ -79,7 +79,7 @@ public class ApplicationWindow extends Application{
 	private MediaPlayer player;
 	private Slider timeSlider, volumeSlider;
 	private Duration duration;
-	private Label time;
+	private Label time, artistLabel, songLabel;
 	private Button fadeIn, fadeOut, play, reload, skip, next, previous;
 	
 	private static final Duration FADE_DURATION = Duration.seconds(2.0);
@@ -128,7 +128,12 @@ public class ApplicationWindow extends Application{
 //private Media Player accessors / mutators
 	private HBox setupMediaPlayer(){
 		HBox mediaSlot = new HBox();
-		HBox timeControls = new HBox();
+		VBox timeControls = new VBox();
+		HBox timeBox = new HBox();
+		HBox mediaControlBox = new HBox();
+		HBox searchBox = new HBox();
+		HBox fadeBox = new HBox(5);
+		VBox volumeControls = new VBox(10);
 		if(Main.getMasterDataAsList().size()!=0){
 			Path path = Paths.get(Main.getMasterDataAsList().get(0).getFilePath());
 			Media media = new Media(path.toFile().toURI().toString());
@@ -184,7 +189,7 @@ public class ApplicationWindow extends Application{
 		timeSlider = new Slider();
 		HBox.setHgrow(timeSlider, Priority.ALWAYS);
 		timeSlider.setMinSize(100, 50);
-
+		
 		timeSlider.valueProperty().addListener(new InvalidationListener() {
 			@Override
 			public void invalidated(Observable ov) {
@@ -199,6 +204,18 @@ public class ApplicationWindow extends Application{
 				}
 			}
 		});
+		List<MediaFile> data = Main.getMasterDataAsList();
+		if(data.size()!=0){
+			artistLabel = new Label(data.get(0).getArtistName() + " - " +
+									data.get(0).getAlbumName());
+		
+			songLabel = new Label(data.get(0).getSongName());
+		
+		} else{
+			artistLabel = new Label();
+			
+			songLabel = new Label();
+		}
 
 		player.currentTimeProperty().addListener(new ChangeListener<Duration>() {
 			@Override
@@ -255,12 +272,8 @@ public class ApplicationWindow extends Application{
 	    fadeOut.setMaxWidth(Double.MAX_VALUE);
 	    
 	    //volume cotrol box
-	    HBox volumeControls = new HBox(5);
-	    volumeControls.getChildren().setAll(
-	      volumeSlider,
-	      fadeIn,
-	      fadeOut
-	    );
+	    fadeBox.getChildren().addAll(fadeIn, fadeOut);
+	    volumeControls.getChildren().setAll(new Label("Volume"), volumeSlider, fadeBox);
 	    volumeControls.setAlignment(Pos.CENTER);
 
 	    volumeControls.disableProperty().bind(
@@ -270,10 +283,23 @@ public class ApplicationWindow extends Application{
 	      )
 	    );
 	    
-	    timeControls.getChildren().addAll(time);
+	    timeControls.getChildren().addAll(songLabel, artistLabel, timeSlider);
 	    timeControls.setAlignment(Pos.CENTER);
+	    timeControls.setFillWidth(true);
+	    timeControls.setMinWidth(300);
+	    
+	    timeBox.getChildren().addAll(time);
+	    timeBox.setAlignment(Pos.CENTER);
+	    
+	    mediaControlBox.getChildren().addAll(previous,reload, play, skip, next);
+	    mediaControlBox.setAlignment(Pos.CENTER);
+	    
+	    searchBox.getChildren().addAll(new Label("Search"), search);
+	    searchBox.setAlignment(Pos.CENTER_RIGHT);
 		
-		mediaSlot.getChildren().addAll(previous,reload, play, skip, next, timeControls, timeSlider, volumeControls, mediaView, new Label("Search"), search);
+		mediaSlot.getChildren().addAll(mediaControlBox, timeBox, timeControls, volumeControls, mediaView, searchBox);
+		mediaSlot.setSpacing(10);
+		HBox.setHgrow(timeControls, Priority.ALWAYS);
 		return mediaSlot;
 	}
 	
