@@ -11,6 +11,12 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.exceptions.CannotReadException;
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
+import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
+import org.jaudiotagger.tag.TagException;
+
 import com.negativevr.media_library.Main;
 import com.negativevr.media_library.files.MediaFile;
 import com.negativevr.media_library.files.MediaFileAttribute;
@@ -536,7 +542,7 @@ public class ApplicationWindow extends Application{
 		return menu;
 	}
 
-//private button mutators
+//private add window mutators
 	private void showAddWindow(){
 		//create new Stage
 		Stage addWindow = new Stage();
@@ -639,22 +645,35 @@ public class ApplicationWindow extends Application{
                 		&& !songName.textProperty().getValue().equals("")
                 		&& !albumName.textProperty().getValue().equals("")
                 		&& !artistNames.textProperty().getValue().equals("")
-                		/* && !songPath.textProperty().getValue().equals("") */){
-                	MediaFile newFile = new MediaFile(new MediaFileAttribute()
+                		&& !songPath.textProperty().getValue().equals("")
+                		&& songPath.textProperty() != null){
+                	MediaFile newFile = new MediaFile();
+                	try{
+                			newFile = new MediaFile(new MediaFileAttribute()
                 					.setAlbum(albumName.textProperty())
                 					.setName(songName.textProperty())
                 					.setArtists(artistNames.textProperty())
                 					.setGenre(genre.textProperty())
                 					.setDateCreated(new Date().toString())
                 					.setNumber(Integer.parseInt(albumNumber.textProperty().getValue().replace("", "0")))
+                					.setPath(songPath.textProperty().getValue())
                 					.setPlays(0)
-                					.setLength(0.0), //TODO: figure out how to get length from File Path
+                					.setLength(AudioFileIO.read(new File(songPath.textProperty().getValue())).getAudioHeader().getTrackLength()),
                 					Main.getNextUUID());
-                	System.out.println("Success!");
+                	} catch(IOException | NumberFormatException | CannotReadException | TagException | ReadOnlyFileException | InvalidAudioFrameException e){
+                		e.printStackTrace();
+                	}
+                	System.out.println("Successfuly Added:");
+                	System.out.println(newFile);
                 	Main.getMasterData().put(newFile.getUUID(), newFile);
-                	System.out.println(Main.getMasterDataAsList());
+                	try {
+						newFile.writeToDisk();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
                 	((Stage)((Button)t.getSource()).getScene().getWindow()).close();
                 	updateDataTable();
+                	updateFileSystem(Paths.get("C:\\Music\\"), new TreeItem<>(Paths.get("C:\\Music\\").toAbsolutePath().toString(), new ImageView(new Image("remove.png"))));
                 }
             }
         });
@@ -682,7 +701,7 @@ public class ApplicationWindow extends Application{
 	                        fileChooser.showOpenMultipleDialog(parent);
 	                    if (list != null) {
 	                        for (File file : list) {
-	                            path.appendText(file.getAbsolutePath().toString() + "; ");
+	                            path.appendText(file.getAbsolutePath().toString());
 	                        }
 	                    }
 	                }
