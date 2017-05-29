@@ -263,12 +263,12 @@ public class MediaFile implements Serializable {
 	
 	@Override
 	public String toString() {
-		return "Artist Name(s): "+ artistName
+		return  "Song Name: "+ songName
+				+ "\nArtist Name(s): "+ artistName
 				+ "\nAlbum Name: "+ albumName 
 				+ "\nAlbum Number: "+ albumNumber
 				+ "\nDate Created: " + dateCreated
 				+ "\nDate Recorded: "+ dateRecorded
-				+ "\nSong Name: "+ songName
 				+ "\nSong Time: "+ songTime
 				+ "\nFile Path: "+ filePath;
 	}
