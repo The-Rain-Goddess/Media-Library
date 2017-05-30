@@ -29,6 +29,7 @@ public class MediaFile implements Serializable {
 	private String songName;
 	private double songTime;
 	private String filePath;
+	private String libraryFilePath;
 	private String genre;
 
 //constructors
@@ -89,6 +90,7 @@ public class MediaFile implements Serializable {
 		this.filePath = fileAttribute.getPath().get();
 		this.genre = fileAttribute.getGenre().get();
 		this.UUID = UUID;
+		this.libraryFilePath = "";
 	}
 	
 	public MediaFile(){
@@ -269,11 +271,26 @@ public class MediaFile implements Serializable {
 				+ "\nDate Created: " + dateCreated
 				+ "\nDate Recorded: "+ dateRecorded
 				+ "\nSong Time: "+ songTime
-				+ "\nFile Path: "+ filePath;
+				+ "\nFile Path: "+ filePath
+				+ "\nLibrary File: " + libraryFilePath;
 	}
 
 	public void setUUID(long nextUUID) {
 		this.UUID=nextUUID;
 		
+	}
+
+	/**
+	 * @return the libraryFilePath
+	 */
+	public String getLibraryFilePath() {
+		return libraryFilePath;
+	}
+
+	/**
+	 * @param libraryFilePath the libraryFilePath to set
+	 */
+	public void setLibraryFilePath(String libraryFilePath) {
+		this.libraryFilePath = libraryFilePath;
 	}
 }

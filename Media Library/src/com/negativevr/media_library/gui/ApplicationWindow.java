@@ -5,6 +5,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
@@ -66,6 +67,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
+import javafx.scene.media.MediaException;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaPlayer.Status;
 import javafx.scene.media.MediaView;
@@ -277,7 +279,7 @@ public class ApplicationWindow extends Application{
 	    fadeOut.setMaxWidth(Double.MAX_VALUE);
 	    
 	    //volume cotrol box
-	    fadeBox.getChildren().addAll(fadeIn, fadeOut);
+	    fadeBox.getChildren().addAll(fadeOut, fadeIn);
 	    fadeBox.setAlignment(Pos.CENTER);
 	    volumeControls.getChildren().setAll(new Label("Volume"), volumeSlider, fadeBox);
 	    volumeControls.setAlignment(Pos.CENTER);
@@ -582,21 +584,32 @@ public class ApplicationWindow extends Application{
 		dataTable.setRowFactory(tv -> {
 			TableRow<MediaFile> row = new TableRow<>();
 			row.setOnMouseClicked(event -> {
-				if(event.getClickCount() == 1){
-					System.out.println("Clicked");
-					System.out.println(row.getItem());
-				} else if(event.getClickCount() == 2){
-					System.out.println("Playing: \n" + row.getItem());
-					File mediaFile = new File(row.getItem().getFilePath());
-					Media mediaToPlay = new Media(mediaFile.toURI().toString());
-					
-					artistLabel.setText(row.getItem().getArtistName() + " - " + row.getItem().getAlbumName());
-					songLabel.setText(row.getItem().getSongName());
-					player.stop();
-					player = new MediaPlayer(mediaToPlay);
-					player.setAutoPlay(true);
-					updatePlayer();
-					
+				try{
+					if(event.getClickCount() == 1){
+						System.out.println("Clicked");
+						System.out.println(row.getItem());
+					} else if(event.getClickCount() == 2){
+						System.out.println("Playing: \n" + row.getItem());
+						File mediaFile = new File(row.getItem().getLibraryFilePath());
+						Media mediaToPlay = new Media(mediaFile.toURI().toString());
+						artistLabel.setText(row.getItem().getArtistName() + " - " + row.getItem().getAlbumName());
+						songLabel.setText(row.getItem().getSongName());
+						player.stop();
+						player = new MediaPlayer(mediaToPlay);
+						player.setAutoPlay(true);
+						updatePlayer();
+						
+					}
+				
+				} catch(MediaException e){
+					Stage errorWindow = new Stage();
+					VBox componentLayout = new VBox();
+					Label errorLabel = new Label(e.getMessage());
+					VBox.setMargin(errorLabel, new Insets(10,10,10,10));
+					componentLayout.getChildren().addAll(errorLabel);
+					Scene scene = new Scene(componentLayout);
+					errorWindow.setScene(scene);
+					errorWindow.show();
 				}
 			});
 			return row;
@@ -847,31 +860,31 @@ public class ApplicationWindow extends Application{
                 		&& songPath.textProperty() != null){
                 	MediaFile newFile = new MediaFile();
                 	String number = (albumNumber.textProperty().getValue().equals("")) ? "0" : albumNumber.textProperty().getValue();
-                	try{
-                			newFile = new MediaFile(new MediaFileAttribute()
-                					.setAlbum(albumName.textProperty())
-                					.setName(songName.textProperty())
-                					.setArtists(artistNames.textProperty())
-                					.setGenre(genre.textProperty())
-                					.setDateCreated(new Date().toString())
-                					.setNumber(Integer.parseInt(number))
-                					.setPath(songPath.textProperty().getValue())
-                					.setPlays(0)
-                					.setLength(AudioFileIO.read(new File(songPath.textProperty().getValue())).getAudioHeader().getTrackLength()),
-                					Main.getNextUUID());
-                			
+        			MediaFileAttribute mfa = new MediaFileAttribute()
+        					.setAlbum(albumName.textProperty())
+        					.setName(songName.textProperty())
+        					.setArtists(artistNames.textProperty())
+        					.setGenre(genre.textProperty())
+        					.setDateCreated(new Date().toString())
+        					.setNumber(Integer.parseInt(number))
+        					.setPath(songPath.textProperty().getValue())
+        					.setPlays(0);
+                	try{		
+                		mfa.setLength(AudioFileIO.read(new File(songPath.textProperty().getValue())).getAudioHeader().getTrackLength());        			
                 	} catch(IOException | NumberFormatException | CannotReadException | TagException | ReadOnlyFileException | InvalidAudioFrameException e){
                 		e.printStackTrace();
-                	}
+                		mfa.setLength(Double.NaN);
+                	} newFile = new MediaFile(mfa, Main.getNextUUID());
                 	System.out.println("Successfuly Added:");
                 	System.out.println(newFile);
-                	Main.getMasterData().put(newFile.getUUID(), newFile);
+                	newFile.setLibraryFilePath("C:\\Music\\" + newFile.getArtistName() + "\\" + newFile.getAlbumName() + "\\" + newFile.getSongName() + "." + newFile.getFilePath().split("\\.")[1]);
                 	try {
 						newFile.writeToDisk();
-						Files.copy(Paths.get(songPath.textProperty().getValue()), Paths.get(newFile.getFileLocation() + songName.textProperty().getValue() + ".mp3") );
+						Files.copy(Paths.get(songPath.textProperty().getValue()), Paths.get(newFile.getLibraryFilePath()), StandardCopyOption.COPY_ATTRIBUTES );
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
+                	Main.getMasterData().put(newFile.getUUID(), newFile);
                 	((Stage)((Button)t.getSource()).getScene().getWindow()).close();
                 	updateDataTable();
                 	updateFileSystem();
