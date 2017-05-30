@@ -113,7 +113,7 @@ public class ApplicationWindow extends Application{
 //private Media Player accessors / mutators
 	private HBox setupMediaPlayer(){
 		HBox mediaSlot = new HBox();
-		Path path = Paths.get("Q:\\Documents\\Music\\Imagine Dragons - Believer.mp3");
+		Path path = Paths.get("C:\\Users\\Vaneh\\Downloads\\Pirates of the Caribbean (Auckland Symphony Orchestra) 1080p.mp3");
 		Media media = new Media(path.toFile().toURI().toString());
 		player = new MediaPlayer(media);
 		player.setAutoPlay(true);
@@ -527,7 +527,7 @@ public class ApplicationWindow extends Application{
                 	MediaFile newFile = new MediaFile(new MediaFileAttribute()
                 					.setAlbum(albumName.textProperty())
                 					.setName(songName.textProperty())
-                					.setArtistStrings(Arrays.asList(artistNames.textProperty().getValue().split("; ")))
+                					.setArtists(artistNames.textProperty())
                 					.setGenre(genre.textProperty())
                 					.setDateCreated(new Date().toString())
                 					.setNumber(Integer.parseInt(albumNumber.textProperty().getValue().replace("", "0")))
