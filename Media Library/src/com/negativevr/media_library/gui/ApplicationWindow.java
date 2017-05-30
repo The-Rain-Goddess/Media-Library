@@ -349,7 +349,6 @@ public class ApplicationWindow extends Application{
 			public void handle(ActionEvent e) {
 				updateValues();
 				Status status = player.getStatus();
-	
 				if (status == Status.PAUSED
 				|| status == Status.READY
 				|| status == Status.UNKNOWN
@@ -365,7 +364,11 @@ public class ApplicationWindow extends Application{
 		
 		player.setOnEndOfMedia(()-> {
 			play.setGraphic(imageViewPlay);
+			player.seek(new Duration(0));
+			player.pause();
 		});
+		
+		
 		
 		reload.setOnAction((ActionEvent e) -> {
 			player.seek(player.getStartTime());
