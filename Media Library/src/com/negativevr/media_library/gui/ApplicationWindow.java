@@ -87,6 +87,7 @@ public class ApplicationWindow extends Application{
 	private Duration duration;
 	private Label time, artistLabel, songLabel;
 	private Button fadeIn, fadeOut, play, reload, skip, next, previous;
+	private MediaStatus status = MediaStatus.REPEAT_NONE;
 	
 	final Path rootPath = Paths.get("C:\\Music\\");
     final TreeItem<String> rootNode = new TreeItem<>(rootPath.toAbsolutePath().toString());
@@ -136,7 +137,7 @@ public class ApplicationWindow extends Application{
 	private HBox setupMediaPlayer(){
 		HBox mediaSlot = new HBox();
 		VBox timeControls = new VBox();
-		HBox timeBox = new HBox();
+		VBox timeBox = new VBox();
 		HBox mediaControlBox = new HBox();
 		HBox searchBox = new HBox();
 		HBox fadeBox = new HBox(5);
@@ -192,6 +193,21 @@ public class ApplicationWindow extends Application{
 		
 		next = new Button();
 		next.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/next.png")));
+		
+		Button repeat = new Button();
+		if(status == MediaStatus.REPEAT_NONE)
+			repeat.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/repeat_none.png")));
+		else if(status == MediaStatus.REPEAT_SINGLE)
+			repeat.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/repeat_single.png")));
+		repeat.setOnAction((ActionEvent e) ->{
+			if(status == MediaStatus.REPEAT_SINGLE){
+				status = MediaStatus.REPEAT_NONE;
+				repeat.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/repeat_none.png")));
+			} else if(status == MediaStatus.REPEAT_NONE){
+				status = MediaStatus.REPEAT_SINGLE;
+				repeat.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/repeat_single.png")));
+			}
+		});
 		
 		timeSlider = new Slider();
 		HBox.setHgrow(timeSlider, Priority.ALWAYS);
@@ -278,6 +294,22 @@ public class ApplicationWindow extends Application{
 	    });
 	    fadeOut.setMaxWidth(Double.MAX_VALUE);
 	    
+	    player.setOnEndOfMedia(()-> {
+			play.setGraphic(imageViewPlay);
+			if(status==MediaStatus.REPEAT_NONE){
+				player.seek(new Duration(0));
+				player.pause();
+			} else if(status == MediaStatus.REPEAT_SINGLE){
+				try {
+					player.wait(1000L);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				} player.seek(new Duration(0));
+				player.play();
+			}
+			
+		});
+	    
 	    //volume cotrol box
 	    fadeBox.getChildren().addAll(fadeOut, fadeIn);
 	    fadeBox.setAlignment(Pos.CENTER);
@@ -296,7 +328,7 @@ public class ApplicationWindow extends Application{
 	    timeControls.setFillWidth(true);
 	    timeControls.setMinWidth(300);
 	    
-	    timeBox.getChildren().addAll(time);
+	    timeBox.getChildren().addAll(repeat,time);
 	    timeBox.setAlignment(Pos.CENTER);
 	    
 	    mediaControlBox.getChildren().addAll(previous,reload, play, skip, next);
@@ -367,11 +399,15 @@ public class ApplicationWindow extends Application{
 		
 		player.setOnEndOfMedia(()-> {
 			play.setGraphic(imageViewPlay);
-			player.seek(new Duration(0));
-			player.pause();
+			if(status==MediaStatus.REPEAT_NONE){
+				player.seek(new Duration(0));
+				player.pause();
+			} else if(status == MediaStatus.REPEAT_SINGLE){
+				player.seek(new Duration(0));
+				player.play();
+			}
+			
 		});
-		
-		
 		
 		reload.setOnAction((ActionEvent e) -> {
 			player.seek(player.getStartTime());
