@@ -363,6 +363,10 @@ public class ApplicationWindow extends Application{
 			}
 		});
 		
+		player.setOnEndOfMedia(()-> {
+			play.setGraphic(imageViewPlay);
+		});
+		
 		reload.setOnAction((ActionEvent e) -> {
 			player.seek(player.getStartTime());
 		});
