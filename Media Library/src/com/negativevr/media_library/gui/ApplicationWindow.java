@@ -877,7 +877,8 @@ public class ApplicationWindow extends Application{
                 	} newFile = new MediaFile(mfa, Main.getNextUUID());
                 	System.out.println("Successfuly Added:");
                 	System.out.println(newFile);
-                	newFile.setLibraryFilePath("C:\\Music\\" + newFile.getArtistName() + "\\" + newFile.getAlbumName() + "\\" + newFile.getSongName() + "." + newFile.getFilePath().split("\\.")[1]);
+                	String[] attrs = newFile.getFilePath().split("\\.");
+                	newFile.setLibraryFilePath("C:\\Music\\" + newFile.getArtistName() + "\\" + newFile.getAlbumName() + "\\" + newFile.getSongName() + "." + attrs[attrs.length-1]);
                 	try {
 						newFile.writeToDisk();
 						Files.copy(Paths.get(songPath.textProperty().getValue()), Paths.get(newFile.getLibraryFilePath()), StandardCopyOption.COPY_ATTRIBUTES );
