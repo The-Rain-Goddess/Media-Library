@@ -37,7 +37,7 @@ public class Main {
 			ApplicationWindow app = new ApplicationWindow();
 			app.begin(args);
 			
-			writeToDisk();
+			//writeToDisk();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -72,6 +72,7 @@ public class Main {
 	}
 
 	// private accessors/ mutators
+	@SuppressWarnings("unused")
 	private static void writeToDisk() throws IOException {
 		for (Map.Entry<Long, MediaFile> entry : masterMediaData.entrySet()) {
 			MediaFile fileToBeWritten = entry.getValue();
