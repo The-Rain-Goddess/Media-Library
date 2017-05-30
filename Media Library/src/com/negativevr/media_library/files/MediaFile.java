@@ -1,15 +1,10 @@
 package com.negativevr.media_library.files;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
@@ -34,6 +29,7 @@ public class MediaFile implements Serializable {
 	private String songName;
 	private double songTime;
 	private String filePath;
+	private String libraryFilePath;
 	private String genre;
 
 //constructors
@@ -94,6 +90,7 @@ public class MediaFile implements Serializable {
 		this.filePath = fileAttribute.getPath().get();
 		this.genre = fileAttribute.getGenre().get();
 		this.UUID = UUID;
+		this.libraryFilePath = "";
 	}
 	
 	public MediaFile(){
@@ -101,12 +98,6 @@ public class MediaFile implements Serializable {
 	}
 	
 //private accessors/mutators
-	private List<StringProperty> convertToProperty(List<String> l){
-		List<StringProperty> list  = new ArrayList<>();
-		for(String s : l){
-			list.add(new SimpleStringProperty(s));
-		} return list;
-	}
 	
 //non-private accesors/ mutators	
 	/**
@@ -255,6 +246,8 @@ public class MediaFile implements Serializable {
 	}
 	
 	public void writeToDisk() throws IOException {
+		File dir = new File("C:\\Music\\" + getArtistName().toLowerCase() + "\\" + getAlbumName().toLowerCase() + "\\");
+		dir.mkdirs();
 		FileOutputStream f_out = new FileOutputStream("C:\\Music\\"+ artistName.toLowerCase() + "\\" + albumName.toLowerCase() + "\\" + UUID + ".data");
 		ObjectOutputStream obj_out = new ObjectOutputStream(f_out);
 		obj_out.writeObject(this);
@@ -262,25 +255,42 @@ public class MediaFile implements Serializable {
 		f_out.close();		
 	}
 	
-	/////////////////////////////////////////
-	public void readFromFile() throws IOException{
-	
+	/**
+	 * @return the File's Location
+	 */
+	public String getFileLocation(){
+		return "C:\\Music\\" + getArtistName().toLowerCase() + "\\" + getAlbumName().toLowerCase() + "\\";
 	}
 	
 	@Override
 	public String toString() {
-		return "Artist Name(s): "+ artistName
+		return  "Song Name: "+ songName
+				+ "\nArtist Name(s): "+ artistName
 				+ "\nAlbum Name: "+ albumName 
 				+ "\nAlbum Number: "+ albumNumber
 				+ "\nDate Created: " + dateCreated
 				+ "\nDate Recorded: "+ dateRecorded
-				+ "\nSong Name: "+ songName
 				+ "\nSong Time: "+ songTime
-				+ "\nFile Path: "+ filePath;
+				+ "\nFile Path: "+ filePath
+				+ "\nLibrary File: " + libraryFilePath;
 	}
 
 	public void setUUID(long nextUUID) {
 		this.UUID=nextUUID;
 		
+	}
+
+	/**
+	 * @return the libraryFilePath
+	 */
+	public String getLibraryFilePath() {
+		return libraryFilePath;
+	}
+
+	/**
+	 * @param libraryFilePath the libraryFilePath to set
+	 */
+	public void setLibraryFilePath(String libraryFilePath) {
+		this.libraryFilePath = libraryFilePath;
 	}
 }

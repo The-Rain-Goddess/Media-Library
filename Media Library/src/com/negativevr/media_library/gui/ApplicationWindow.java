@@ -5,21 +5,36 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.exceptions.CannotReadException;
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
+import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
+import org.jaudiotagger.tag.TagException;
+
 import com.negativevr.media_library.Main;
 import com.negativevr.media_library.files.MediaFile;
 import com.negativevr.media_library.files.MediaFileAttribute;
 import com.negativevr.media_library.storage.FilePathTreeItem;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -28,6 +43,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Control;
@@ -37,6 +53,7 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
@@ -50,6 +67,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
+import javafx.scene.media.MediaException;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaPlayer.Status;
 import javafx.scene.media.MediaView;
@@ -60,14 +78,19 @@ import javafx.util.Duration;
 
 public class ApplicationWindow extends Application{
 
-	private final double WINDOW_MIN_WIDTH = 900;
-	private final double WINDOW_MIN_HEIGHT = 600;
+	private final double WINDOW_MIN_WIDTH = 1200;
+	private final double WINDOW_MIN_HEIGHT = 800;
 	private TextField search;
 	private TableView<MediaFile> dataTable;
 	private MediaPlayer player;
-	private Slider slider;
+	private Slider timeSlider, volumeSlider;
 	private Duration duration;
-	private Label time;
+	private Label time, artistLabel, songLabel;
+	private Button fadeIn, fadeOut, play, reload, skip, next, previous;
+	
+	final Path rootPath = Paths.get("C:\\Music\\");
+    final TreeItem<String> rootNode = new TreeItem<>(rootPath.toAbsolutePath().toString());
+	private static final Duration FADE_DURATION = Duration.seconds(2.0);
 
 //constructor	
 	public ApplicationWindow() {
@@ -89,45 +112,54 @@ public class ApplicationWindow extends Application{
 		//set main window size
 		componentWindow.setMinHeight(WINDOW_MIN_HEIGHT);
 		componentWindow.setMinWidth(WINDOW_MIN_WIDTH);
-		     
-        //Create the scene and add the parent container to it
-        Scene scene = new Scene(componentWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT);
         
         //align dataTable
-        //tableDisplay.setTop(searchBox);
         tableDisplay.setRight(setupMediaDataTable());
         tableDisplay.setLeft(setupMediaFileBrowser());
         tableDisplay.setTop(setupMediaPlayer());;
         VBox.setMargin(tableDisplay, new Insets(10,10,10,10));
-        tableDisplay.setPrefSize(800,400);
         componentLayout.getChildren().addAll(setupMenuBar(), tableDisplay);
         
         //add componentLayout to Window
 		componentWindow.getChildren().addAll(componentLayout);
+		
+		//Create the scene and add the parent container to it
+        Scene scene = new Scene(componentWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT);
         
         //Add the Scene to the Stage
         rootStage.setScene(scene);
+        rootStage.getIcons().add(new Image(this.getClass().getResourceAsStream( "media_library.png" ))); 
         rootStage.show();
 	}
 	
 //private Media Player accessors / mutators
 	private HBox setupMediaPlayer(){
 		HBox mediaSlot = new HBox();
-		Path path = Paths.get("C:\\Users\\Vaneh\\Downloads\\Pirates of the Caribbean (Auckland Symphony Orchestra) 1080p.mp3");
-		Media media = new Media(path.toFile().toURI().toString());
-		player = new MediaPlayer(media);
-		player.setAutoPlay(true);
+		VBox timeControls = new VBox();
+		HBox timeBox = new HBox();
+		HBox mediaControlBox = new HBox();
+		HBox searchBox = new HBox();
+		HBox fadeBox = new HBox(5);
+		VBox volumeControls = new VBox(10);
+		if(Main.getMasterDataAsList().size()!=0){
+			Path path = Paths.get(Main.getMasterDataAsList().get(0).getFilePath());
+			Media media = new Media(path.toFile().toURI().toString());
+			player = new MediaPlayer(media);
+		} else{
+			player = new MediaPlayer(new Media(Paths.get("init.mp3").toFile().toURI().toString()));
+		}
+		
+		//player.setAutoPlay(true);
 		MediaView mediaView = new MediaView();
 		mediaView.setMediaPlayer(player);
-		//play button
-		Button playButton = new Button("Play/Pause");
-		Image PlayButtonImage = new Image("add.png");
-		Image PauseButtonImage = new Image("remove.png");
+		Image PlayButtonImage = new Image("com/negativevr/media_library/res/play.png");
+		Image PauseButtonImage = new Image("com/negativevr/media_library/res/pause.png");
 		ImageView imageViewPlay = new ImageView(PlayButtonImage);
 		ImageView imageViewPause = new ImageView(PauseButtonImage);
 		
-		playButton.setGraphic(imageViewPlay);
-		playButton.setOnAction(new EventHandler<ActionEvent>() {
+		play = new Button();
+		play.setGraphic(imageViewPlay);
+		play.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent e) {
 				updateValues();
@@ -135,39 +167,62 @@ public class ApplicationWindow extends Application{
 	
 				if (status == Status.PAUSED
 				|| status == Status.READY
+				|| status == Status.UNKNOWN
 				|| status == Status.STOPPED) {
 					player.play();
-					playButton.setGraphic(imageViewPlay);
+					play.setGraphic(imageViewPause);
 				} else {
 					player.pause();
-					playButton.setGraphic(imageViewPause);
+					play.setGraphic(imageViewPlay);
 				}
 			}
 		});
 		
-		Button reload = new Button("Reload");
+		reload = new Button();
+		reload.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/reload.png")));
 		reload.setOnAction((ActionEvent e) -> {
 			player.seek(player.getStartTime());
 		});
 		
-		slider = new Slider();
-		HBox.setHgrow(slider, Priority.ALWAYS);
-		slider.setMinSize(100, 50);
-
-		slider.valueProperty().addListener(new InvalidationListener() {
+		skip = new Button();
+		skip.setGraphic((new ImageView(new Image("com/negativevr/media_library/res/skip.png"))));
+		
+		previous = new Button();
+		previous.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/previous.png")));
+		
+		next = new Button();
+		next.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/next.png")));
+		
+		timeSlider = new Slider();
+		HBox.setHgrow(timeSlider, Priority.ALWAYS);
+		timeSlider.setMinSize(100, 50);
+		
+		timeSlider.valueProperty().addListener(new InvalidationListener() {
 			@Override
 			public void invalidated(Observable ov) {
-				if (slider.isValueChanging()) {
+				if (timeSlider.isValueChanging()) {
 					// multiply duration by percentage calculated by slider position
 					Duration duration = player.getCurrentTime();
 					if (duration != null) {
-						player.seek(duration.multiply(slider.getValue() / 100.0));
+						player.seek(duration.multiply(timeSlider.getValue() / 100.0));
 					}
 					updateValues();
 	
 				}
 			}
 		});
+		List<MediaFile> data = Main.getMasterDataAsList();
+		if(data.size()!=0){
+			artistLabel = new Label(data.get(0).getArtistName() + " - " +
+									data.get(0).getAlbumName());
+		
+			songLabel = new Label(data.get(0).getSongName());
+		
+		} else{
+			artistLabel = new Label();
+			
+			songLabel = new Label();
+		}
 
 		player.currentTimeProperty().addListener(new ChangeListener<Duration>() {
 			@Override
@@ -177,28 +232,236 @@ public class ApplicationWindow extends Application{
 		});
 		
 		time = new Label();
-		time.setTextFill(Color.YELLOW);
+		time.setTextFill(Color.BLACK);
 		
 		player.setOnReady(() -> {
 			duration = player.getMedia().getDuration();
 			updateValues();
 		});
 		
-		mediaSlot.getChildren().addAll(playButton,reload, slider,time,mediaView, new Label("Search"), search);
+		//volume control slider
+		volumeSlider = new Slider(0, 1, 0);
+	    player.volumeProperty().bindBidirectional(volumeSlider.valueProperty());
+	    player.setVolume(0.5);
+
+	    //fade in time line
+	    final Timeline fadeInTimeline = new Timeline(
+	      new KeyFrame(
+	        FADE_DURATION,
+	        new KeyValue(player.volumeProperty(), 1.0)
+	      )
+	    );
+	    
+	    //fade out timeline
+	    final Timeline fadeOutTimeline = new Timeline(
+	      new KeyFrame(
+	        FADE_DURATION,
+	        new KeyValue(player.volumeProperty(), 0.0)
+	      )
+	    );
+
+	    //fade in button
+	    fadeIn = new Button("Fade In");
+	    fadeIn.setOnAction(new EventHandler<ActionEvent>() {
+	      @Override public void handle(ActionEvent t) {
+	        fadeInTimeline.play();
+	      }
+	    });
+	    fadeIn.setMaxWidth(Double.MAX_VALUE);
+	    
+	    //fade out button
+	    fadeOut = new Button("Fade Out");
+	    fadeOut.setOnAction(new EventHandler<ActionEvent>() {
+	      @Override public void handle(ActionEvent t) {
+	        fadeOutTimeline.play();
+	      }
+	    });
+	    fadeOut.setMaxWidth(Double.MAX_VALUE);
+	    
+	    //volume cotrol box
+	    fadeBox.getChildren().addAll(fadeOut, fadeIn);
+	    fadeBox.setAlignment(Pos.CENTER);
+	    volumeControls.getChildren().setAll(new Label("Volume"), volumeSlider, fadeBox);
+	    volumeControls.setAlignment(Pos.CENTER);
+
+	    volumeControls.disableProperty().bind(
+	      Bindings.or(
+	        Bindings.equal(Timeline.Status.RUNNING, fadeInTimeline.statusProperty()),
+	        Bindings.equal(Timeline.Status.RUNNING, fadeOutTimeline.statusProperty())
+	      )
+	    );
+	    
+	    timeControls.getChildren().addAll(songLabel, artistLabel, timeSlider);
+	    timeControls.setAlignment(Pos.CENTER);
+	    timeControls.setFillWidth(true);
+	    timeControls.setMinWidth(300);
+	    
+	    timeBox.getChildren().addAll(time);
+	    timeBox.setAlignment(Pos.CENTER);
+	    
+	    mediaControlBox.getChildren().addAll(previous,reload, play, skip, next);
+	    mediaControlBox.setAlignment(Pos.CENTER);
+	    
+	    searchBox.getChildren().addAll(new Label("Search"), search);
+	    searchBox.setAlignment(Pos.CENTER_RIGHT);
+		
+		mediaSlot.getChildren().addAll(mediaControlBox, timeBox, timeControls, volumeControls, mediaView, searchBox);
+		mediaSlot.setSpacing(10);
+		HBox.setHgrow(timeControls, Priority.ALWAYS);
 		return mediaSlot;
 	}
 	
+	private void updatePlayer(){
+		timeSlider.valueProperty().addListener(new InvalidationListener() {
+			@Override
+			public void invalidated(Observable ov) {
+				if (timeSlider.isValueChanging()) {
+					// multiply duration by percentage calculated by slider position
+					Duration duration = player.getCurrentTime();
+					if (duration != null) {
+						player.seek(duration.multiply(timeSlider.getValue() / 100.0));
+					}
+					updateValues();
+	
+				}
+			}
+		});
+		
+		player.setOnReady(() -> {
+			duration = player.getMedia().getDuration();
+			updateValues();
+		});
+		
+		player.currentTimeProperty().addListener(new ChangeListener<Duration>() {
+			@Override
+			public void changed(ObservableValue<? extends Duration> arg0, Duration arg1, Duration arg2) {
+				updateValues();
+			}
+		});
+		
+		player.volumeProperty().bindBidirectional(volumeSlider.valueProperty());
+		
+		Image PlayButtonImage = new Image("com/negativevr/media_library/res/play.png");
+		Image PauseButtonImage = new Image("com/negativevr/media_library/res/pause.png");
+		ImageView imageViewPlay = new ImageView(PlayButtonImage);
+		ImageView imageViewPause = new ImageView(PauseButtonImage);
+		
+		play.setGraphic(imageViewPause);
+		play.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent e) {
+				updateValues();
+				Status status = player.getStatus();
+				if (status == Status.PAUSED
+				|| status == Status.READY
+				|| status == Status.UNKNOWN
+				|| status == Status.STOPPED) {
+					player.play();
+					play.setGraphic(imageViewPause);
+				} else {
+					player.pause();
+					play.setGraphic(imageViewPlay);
+				}
+			}
+		});
+		
+		player.setOnEndOfMedia(()-> {
+			play.setGraphic(imageViewPlay);
+			player.seek(new Duration(0));
+			player.pause();
+		});
+		
+		
+		
+		reload.setOnAction((ActionEvent e) -> {
+			player.seek(player.getStartTime());
+		});
+		
+		//fade in time line
+	    final Timeline fadeInTimeline = new Timeline(
+	      new KeyFrame(
+	        FADE_DURATION,
+	        new KeyValue(player.volumeProperty(), 1.0)
+	      )
+	    );
+	    
+	    //fade out timeline
+	    final Timeline fadeOutTimeline = new Timeline(
+	      new KeyFrame(
+	        FADE_DURATION,
+	        new KeyValue(player.volumeProperty(), 0.0)
+	      )
+	    );
+		
+		 //fade in button
+	    fadeIn = new Button("Fade In");
+	    fadeIn.setOnAction(new EventHandler<ActionEvent>() {
+	      @Override public void handle(ActionEvent t) {
+	        fadeInTimeline.play();
+	      }
+	    });
+	    fadeIn.setMaxWidth(Double.MAX_VALUE);
+	    
+	    //fade out button
+	    fadeOut = new Button("Fade Out");
+	    fadeOut.setOnAction(new EventHandler<ActionEvent>() {
+	      @Override public void handle(ActionEvent t) {
+	        fadeOutTimeline.play();
+	      }
+	    });
+	    fadeOut.setMaxWidth(Double.MAX_VALUE);
+	}
+	
+	private static String formatTime(Duration elapsed, Duration duration) {
+		   int intElapsed = (int)Math.floor(elapsed.toSeconds());
+		   int elapsedHours = intElapsed / (60 * 60);
+		   if (elapsedHours > 0) {
+		       intElapsed -= elapsedHours * 60 * 60;
+		   }
+		   int elapsedMinutes = intElapsed / 60;
+		   int elapsedSeconds = intElapsed - elapsedHours * 60 * 60 
+		                           - elapsedMinutes * 60;
+		 
+		   if (duration.greaterThan(Duration.ZERO)) {
+		      int intDuration = (int)Math.floor(duration.toSeconds());
+		      int durationHours = intDuration / (60 * 60);
+		      if (durationHours > 0) {
+		         intDuration -= durationHours * 60 * 60;
+		      }
+		      int durationMinutes = intDuration / 60;
+		      int durationSeconds = intDuration - durationHours * 60 * 60 - 
+		          durationMinutes * 60;
+		      if (durationHours > 0) {
+		         return String.format("%d:%02d:%02d/%d:%02d:%02d", 
+		            elapsedHours, elapsedMinutes, elapsedSeconds,
+		            durationHours, durationMinutes, durationSeconds);
+		      } else {
+		          return String.format("%02d:%02d/%02d:%02d",
+		            elapsedMinutes, elapsedSeconds,durationMinutes, 
+		                durationSeconds);
+		      }
+		      } else {
+		          if (elapsedHours > 0) {
+		             return String.format("%d:%02d:%02d", elapsedHours, 
+		                    elapsedMinutes, elapsedSeconds);
+		            } else {
+		                return String.format("%02d:%02d",elapsedMinutes, 
+		                    elapsedSeconds);
+		            }
+		        }
+		    }
+	
 	private void updateValues() {
-		if (time != null && slider != null && duration != null) {
+		if (time != null && timeSlider != null && duration != null) {
 			Platform.runLater(new Runnable() {
 				@SuppressWarnings("deprecation")
 				@Override
 				public void run() {
 					Duration currentTime = player.getCurrentTime();
-					time.setText("");//formatTime(currentTime, duration));
-					slider.setDisable(duration.isUnknown());
-					if (!slider.isDisabled() && duration.greaterThan(Duration.ZERO) && !slider.isValueChanging()) {
-						slider.setValue(currentTime.divide(duration).toMillis() * 100.0);
+					time.setText(formatTime(currentTime, duration));
+					timeSlider.setDisable(duration.isUnknown());
+					if (!timeSlider.isDisabled() && duration.greaterThan(Duration.ZERO) && !timeSlider.isValueChanging()) {
+						timeSlider.setValue(currentTime.divide(duration).toMillis() * 100.0);
 					}
 				}
 			});
@@ -208,49 +471,71 @@ public class ApplicationWindow extends Application{
 //private File Browser mutators / accessors
 	private VBox setupMediaFileBrowser(){
 		VBox treeBox = new VBox();
+		treeBox.setMinHeight(650);
+		treeBox.setMaxHeight(650);
 	    treeBox.setPadding(new Insets(10,10,10,10));
 	    treeBox.setSpacing(10);
 	    
-	  //setup the file browser root
-	    Path rootPath = Paths.get("C:\\Music\\");
-	    final TreeItem<String> rootNode = new TreeItem<>(rootPath.toAbsolutePath().toString(),new ImageView(new Image("remove.png")));
-	    //ClassLoader.getSystemResourceAsStream("com/computer.png")
-	    //Iterable<Path> rootDirectories = FileSystems.getDefault().getRootDirectories();
+	    //setup the root directory for file browser
+	    rootNode.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/remove.png")));
 	    Iterable<Path> rootDirectories = getDirectories(rootPath);
 	    
+	    //populates the rootNode with Tree Items
 	    for(Path name : rootDirectories){
 	    	FilePathTreeItem treeNode = new FilePathTreeItem(name);
 	    	rootNode.getChildren().add(treeNode);
 	    	//treeNode.setExpanded(true);
 	    } rootNode.setExpanded(true);
 	    
-	    /*
-	    rootNode.addEventHandler(TreeItem.childrenModificationEvent(), new EventHandler<TreeItem.TreeModificationEvent<String>>(){
-			@Override
-			public void handle(TreeModificationEvent<String> e) {
-				//updateFileSystem(rootPath, rootNode);
-				//System.out.println("Waht");
-			}
-	    });*/
-	    
 	    //create the tree view
 	    TreeView<String> treeView = new TreeView<>(rootNode);
+	    treeView.setMinHeight(600);
+	    
 	    //add everything to the tree pane
-	    treeBox.getChildren().addAll(new Label("File browser"),treeView);
-	    VBox.setVgrow(treeView,Priority.ALWAYS);
+	    treeBox.getChildren().addAll(new Label("File browser"), treeView);
 	    
 	    return treeBox;
 	}
 	
-	private void updateFileSystem(final Path rootPath, final TreeItem<String> root){ 
-		root.getChildren().clear();
+	@SuppressWarnings("unused")
+	private void setupFileSystemWatcher(){
+		Path myDir = Paths.get("C:\\Music");       
+
+        try {
+           WatchService watcher = myDir.getFileSystem().newWatchService();
+           myDir.register(watcher, StandardWatchEventKinds.ENTRY_CREATE, 
+           StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+
+           WatchKey watckKey = watcher.take();
+
+           List<WatchEvent<?>> events = watckKey.pollEvents();
+           for (WatchEvent<?> event : events) {
+                if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
+                    System.out.println("Created: " + event.context().toString());
+                }
+                if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
+                    System.out.println("Delete: " + event.context().toString());
+                }
+                if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
+                    System.out.println("Modify: " + event.context().toString());
+                }
+            }
+           
+        } catch (Exception e) {
+            System.out.println("Error: " + e.toString());
+        }
+	}
+	
+	private void updateFileSystem(){ 
+		System.out.println("Updating File System...");
+		rootNode.getChildren().clear();
 		Iterable<Path> rootDirectories = getDirectories(rootPath);
 	    
 	    for(Path name : rootDirectories){
 	    	FilePathTreeItem treeNode = new FilePathTreeItem(name);
-	    	root.getChildren().add(treeNode);
+	    	rootNode.getChildren().add(treeNode);
 	    	//treeNode.setExpanded(true);
-	    } root.setExpanded(true);
+	    } rootNode.setExpanded(true);
 	}
 	
 	private List<Path> getDirectories(final Path dir) {
@@ -265,10 +550,13 @@ public class ApplicationWindow extends Application{
 	}
 	
 //private Data Table mutators / accessors
-	private TableView<MediaFile> setupMediaDataTable(){
+	private VBox setupMediaDataTable(){
+		VBox container = new VBox();
+		container.setMinHeight(650);
 		dataTable = new TableView<MediaFile>();
 		dataTable.setId("Data Table");
-		dataTable.setMinHeight(WINDOW_MIN_HEIGHT - 100);
+		dataTable.setMinHeight(650);
+		dataTable.setMaxHeight(650);
 		dataTable.setMinWidth(2*WINDOW_MIN_WIDTH/3);
 		BorderPane.setMargin(dataTable, new Insets(10,10,10,10));
 		
@@ -281,10 +569,51 @@ public class ApplicationWindow extends Application{
 		// Bind the SortedList comparator to the TableView comparator
 		sortedData.comparatorProperty().bind(dataTable.comparatorProperty());
 		
+		//set click event henadling
+		setDataTableClickEvents();
+		
 		// Show the Data
 		dataTable.setItems(sortedData);
-		
-		return dataTable;
+		container.setMaxHeight(WINDOW_MIN_HEIGHT - 200);
+		//VBox.setVgrow(dataTable, Priority.NEVER);
+		container.getChildren().addAll(dataTable);
+		return container;
+	}
+	
+	private void setDataTableClickEvents(){
+		dataTable.setRowFactory(tv -> {
+			TableRow<MediaFile> row = new TableRow<>();
+			row.setOnMouseClicked(event -> {
+				try{
+					if(event.getClickCount() == 1){
+						System.out.println("Clicked");
+						System.out.println(row.getItem());
+					} else if(event.getClickCount() == 2){
+						System.out.println("Playing: \n" + row.getItem());
+						File mediaFile = new File(row.getItem().getLibraryFilePath());
+						Media mediaToPlay = new Media(mediaFile.toURI().toString());
+						artistLabel.setText(row.getItem().getArtistName() + " - " + row.getItem().getAlbumName());
+						songLabel.setText(row.getItem().getSongName());
+						player.stop();
+						player = new MediaPlayer(mediaToPlay);
+						player.setAutoPlay(true);
+						updatePlayer();
+						
+					}
+				
+				} catch(MediaException e){
+					Stage errorWindow = new Stage();
+					VBox componentLayout = new VBox();
+					Label errorLabel = new Label(e.getMessage());
+					VBox.setMargin(errorLabel, new Insets(10,10,10,10));
+					componentLayout.getChildren().addAll(errorLabel);
+					Scene scene = new Scene(componentLayout);
+					errorWindow.setScene(scene);
+					errorWindow.show();
+				}
+			});
+			return row;
+		});
 	}
 	
 	private SortedList<MediaFile> getSortedData(){
@@ -327,6 +656,9 @@ public class ApplicationWindow extends Application{
 		
 		// Bind the SortedList comparator to the TableView comparator
 		sortedData.comparatorProperty().bind(dataTable.comparatorProperty());
+		
+		//set click events handling
+		setDataTableClickEvents();
 		
 		// Show the Data
 		dataTable.setItems(sortedData);
@@ -374,6 +706,7 @@ public class ApplicationWindow extends Application{
         
         menuBar.setMinWidth(WINDOW_MIN_WIDTH);
         menuBar.getMenus().addAll(menuFile, menuEdit, menuView);
+        menuBar.autosize();
         return menuBar;
 	}
 	
@@ -400,7 +733,7 @@ public class ApplicationWindow extends Application{
 	
 	private MenuItem getMenuItem(String name, MenuAction action){
 		MenuItem item = new MenuItem(name,
-            new ImageView(new Image(name.toLowerCase()+".png")));
+            new ImageView(new Image("com/negativevr/media_library/res/" + name.toLowerCase()+".png")));
         item.setOnAction(new EventHandler<ActionEvent>() {
             @Override
 			public void handle(ActionEvent t) {
@@ -420,7 +753,7 @@ public class ApplicationWindow extends Application{
 		return menu;
 	}
 
-//private button mutators
+//private add window mutators
 	private void showAddWindow(){
 		//create new Stage
 		Stage addWindow = new Stage();
@@ -523,22 +856,39 @@ public class ApplicationWindow extends Application{
                 		&& !songName.textProperty().getValue().equals("")
                 		&& !albumName.textProperty().getValue().equals("")
                 		&& !artistNames.textProperty().getValue().equals("")
-                		/* && !songPath.textProperty().getValue().equals("") */){
-                	MediaFile newFile = new MediaFile(new MediaFileAttribute()
-                					.setAlbum(albumName.textProperty())
-                					.setName(songName.textProperty())
-                					.setArtists(artistNames.textProperty())
-                					.setGenre(genre.textProperty())
-                					.setDateCreated(new Date().toString())
-                					.setNumber(Integer.parseInt(albumNumber.textProperty().getValue().replace("", "0")))
-                					.setPlays(0)
-                					.setLength(0.0), //TODO: figure out how to get length from File Path
-                					Main.getNextUUID());
-                	System.out.println("Success!");
+                		&& !songPath.textProperty().getValue().equals("")
+                		&& songPath.textProperty() != null){
+                	MediaFile newFile = new MediaFile();
+                	String number = (albumNumber.textProperty().getValue().equals("")) ? "0" : albumNumber.textProperty().getValue();
+        			MediaFileAttribute mfa = new MediaFileAttribute()
+        					.setAlbum(albumName.textProperty())
+        					.setName(songName.textProperty())
+        					.setArtists(artistNames.textProperty())
+        					.setGenre(genre.textProperty())
+        					.setDateCreated(new Date().toString())
+        					.setNumber(Integer.parseInt(number))
+        					.setPath(songPath.textProperty().getValue())
+        					.setPlays(0);
+                	try{		
+                		mfa.setLength(AudioFileIO.read(new File(songPath.textProperty().getValue())).getAudioHeader().getTrackLength());        			
+                	} catch(IOException | NumberFormatException | CannotReadException | TagException | ReadOnlyFileException | InvalidAudioFrameException e){
+                		e.printStackTrace();
+                		mfa.setLength(Double.NaN);
+                	} newFile = new MediaFile(mfa, Main.getNextUUID());
+                	System.out.println("Successfuly Added:");
+                	System.out.println(newFile);
+                	String[] attrs = newFile.getFilePath().split("\\.");
+                	newFile.setLibraryFilePath("C:\\Music\\" + newFile.getArtistName() + "\\" + newFile.getAlbumName() + "\\" + newFile.getSongName() + "." + attrs[attrs.length-1]);
+                	try {
+						newFile.writeToDisk();
+						Files.copy(Paths.get(songPath.textProperty().getValue()), Paths.get(newFile.getLibraryFilePath()), StandardCopyOption.COPY_ATTRIBUTES );
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
                 	Main.getMasterData().put(newFile.getUUID(), newFile);
-                	System.out.println(Main.getMasterDataAsList());
                 	((Stage)((Button)t.getSource()).getScene().getWindow()).close();
                 	updateDataTable();
+                	updateFileSystem();
                 }
             }
         });
@@ -566,7 +916,7 @@ public class ApplicationWindow extends Application{
 	                        fileChooser.showOpenMultipleDialog(parent);
 	                    if (list != null) {
 	                        for (File file : list) {
-	                            path.appendText(file.getAbsolutePath().toString() + "; ");
+	                            path.appendText(file.getAbsolutePath().toString());
 	                        }
 	                    }
 	                }

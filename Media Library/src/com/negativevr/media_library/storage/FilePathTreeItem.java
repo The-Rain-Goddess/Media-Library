@@ -15,10 +15,11 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 public class FilePathTreeItem extends TreeItem<String> {
-	public static Image folderCollapseImage = new Image(ClassLoader.getSystemResourceAsStream("folder.png"));
-	public static Image folderExpandImage = new Image(ClassLoader.getSystemResourceAsStream("open folder.png"));
-	public static Image fileImage = new Image(ClassLoader.getSystemResourceAsStream("document.png"));
-
+	public static Image folderCollapseImage = new Image(ClassLoader.getSystemResourceAsStream("com/negativevr/media_library/res/folder.png"));
+	public static Image folderExpandImage = new Image(ClassLoader.getSystemResourceAsStream("com/negativevr/media_library/res/open folder.png"));
+	public static Image fileImage = new Image(ClassLoader.getSystemResourceAsStream("com/negativevr/media_library/res/file.png"));
+	public static Image musicFileImage = new Image(ClassLoader.getSystemResourceAsStream("com/negativevr/media_library/res/music_file.png"));
+	
 	// this stores the full path to the file or directory
 	private String fullPath;
 
@@ -40,11 +41,12 @@ public class FilePathTreeItem extends TreeItem<String> {
 		if (Files.isDirectory(file)) {
 			this.isDirectory = true;
 			this.setGraphic(new ImageView(folderCollapseImage));
-		} else {
+		} else if(this.fullPath.contains(".data")) {
 			this.isDirectory = false;
 			this.setGraphic(new ImageView(fileImage));
-			// if you want different icons for different file types this is
-			// where you'd do it
+		} else{
+			this.isDirectory = false;
+			this.setGraphic(new ImageView(musicFileImage));
 		}
 
 		// set the value

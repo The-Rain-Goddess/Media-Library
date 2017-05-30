@@ -7,13 +7,11 @@ import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import com.negativevr.media_library.files.MediaFile;
-import com.negativevr.media_library.files.MediaFileAttribute;
 import com.negativevr.media_library.gui.ApplicationWindow;
 
 /**
@@ -35,39 +33,11 @@ public class Main {
 		try {
 			createHomeDirectory();
 			readFromFile();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		MediaFile file = new MediaFile("The Killers", "Kill", 4, new Date().toString(), new Date().toString(),
-				"When You Were Young", 210.0, "C:\\", "Alternative", getNextUUID());
-
-		MediaFile file1 = new MediaFile("One Republic", "Hi", 6, new Date().toString(), new Date().toString(),
-				"All The Right Moves", 193.0, "C:\\", "Rock", getNextUUID());
-
-		MediaFile file2 = new MediaFile("Stromae", "Flower", 12, new Date().toString(), new Date().toString(), "Formidable",
-				510.0, "C:\\", "Pop", getNextUUID());
-
-		MediaFile file3 = new MediaFile(new MediaFileAttribute()
-				.setArtistStrings("The Killers")
-				.setAlbum("Sam's Town")
-				.setName("Jenny Was A Friend Of Mine")
-				.setGenre("Indie Rock")
-				.setDateCreated(new Date().toString())
-				.setDateRecorded("9/5/2006").setLength(192)
-				.setNumber(1)
-				.setPath("C:\\").setPlays(0), getNextUUID());
-
-		masterMediaData.put(file.getUUID(), file);
-		masterMediaData.put(file1.getUUID(), file1);
-		masterMediaData.put(file2.getUUID(), file2);
-		masterMediaData.put(file3.getUUID(), file3);
-
-		// System.out.println(masterMediaData);
-
-		ApplicationWindow app = new ApplicationWindow();
-		app.begin(args);
-		try {
-			readToDisk();
+		
+			ApplicationWindow app = new ApplicationWindow();
+			app.begin(args);
+			
+			//writeToDisk();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -83,7 +53,12 @@ public class Main {
 	public static Map<Long, MediaFile> getMasterData() {
 		return masterMediaData;
 	}
-
+	
+	/**
+	 * Returns the Master Media Data map as a list; a synchronized List<{@link com.negativevr.media_library.files.MediaFile;}>.
+	 * 
+	 * @return ccmasterMediaData
+	 */
 	public static List<MediaFile> getMasterDataAsList() {
 		List<MediaFile> list = new ArrayList<>();
 		for (Map.Entry<Long, MediaFile> entry : masterMediaData.entrySet()) {
@@ -97,50 +72,52 @@ public class Main {
 	}
 
 	// private accessors/ mutators
-	private static void readToDisk() throws IOException {
+	@SuppressWarnings("unused")
+	private static void writeToDisk() throws IOException {
 		for (Map.Entry<Long, MediaFile> entry : masterMediaData.entrySet()) {
-			MediaFile file = entry.getValue();
-			File dir = new File("C:\\Music\\" + file.getArtistName().toLowerCase() + "\\");
+			MediaFile fileToBeWritten = entry.getValue();
+			File dir = new File("C:\\Music\\" + fileToBeWritten.getArtistName().toLowerCase() + "\\");
 			dir.mkdirs();
-			new File("C:\\Music\\" + file.getArtistName().toLowerCase() + "\\"
-					+ file.getAlbumName().toLowerCase() + "\\").mkdirs();
-			file.writeToDisk();
+			new File("C:\\Music\\" + fileToBeWritten.getArtistName().toLowerCase() + "\\"
+					+ fileToBeWritten.getAlbumName().toLowerCase() + "\\").mkdirs();
+			fileToBeWritten.writeToDisk();
 		}
 	}
 
 	private static void readFromFile() throws IOException, ClassNotFoundException {
-		List<File> files = files();
-		for (File file : files) {
-			ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
-			MediaFile media = (MediaFile) ois.readObject();
-			media.setUUID(getNextUUID());
-			System.out.println(media);
-			//masterMediaData.put(media.getUUID(), media);
-			ois.close();
+		List<File> files = getFilesFromMainDirectory();
+		if(files!=null){
+			for (File file : files) {
+				ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
+				MediaFile media = (MediaFile) ois.readObject();
+				media.setUUID(getNextUUID());
+				System.out.println("New media read from disk: \n" + media);
+				masterMediaData.put(media.getUUID(), media);
+				ois.close();
+			}
 		}
 	}
 
-	public static List<File> files() {
-		File path = new File("C:\\Music\\");
-
-		File[] files = path.listFiles();
-		List<File> direct = new ArrayList<File>();
-		direct.addAll(Arrays.asList(files));
-
-		for (int k = 0; k < direct.size(); k++) {
-			if(direct.get(k).isDirectory()){
-				List<File> albumDir = Arrays.asList(direct.get(k).listFiles());
+	public static List<File> getFilesFromMainDirectory() {
+		File mainDirectory = new File("C:\\Music\\");
+		File[] files = mainDirectory.listFiles();
+		List<File> artistDir = Arrays.asList(files);
+		List<File> allSongs = new ArrayList<>();
+		for (int k = 0; k < artistDir.size(); k++) {
+			if(artistDir.get(k).isDirectory()){
+				List<File> albumDir = Arrays.asList(artistDir.get(k).listFiles());
 				for(int i = 0; i< albumDir.size(); i++){
 					if(albumDir.get(i).isDirectory()){
 						List<File> songDir = Arrays.asList(albumDir.get(i).listFiles());
-						List<File> allSongs = new ArrayList<>();
 						for(int j = 0; j<songDir.size(); j++)
-							allSongs.add(songDir.get(j));
-						return allSongs;
+							if(songDir.get(j).getAbsolutePath().contains(".data"))
+								allSongs.add(songDir.get(j));
+						
 					}
 				}
 			}
-		} return null;
+		} System.out.println("Files to be read into ram : \n" + allSongs); 
+		return allSongs;
 	}
 
 	/*
