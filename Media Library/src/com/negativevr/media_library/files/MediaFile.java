@@ -5,8 +5,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
@@ -98,12 +96,6 @@ public class MediaFile implements Serializable {
 	}
 	
 //private accessors/mutators
-	private List<StringProperty> convertToProperty(List<String> l){
-		List<StringProperty> list  = new ArrayList<>();
-		for(String s : l){
-			list.add(new SimpleStringProperty(s));
-		} return list;
-	}
 	
 //non-private accesors/ mutators	
 	/**
@@ -259,6 +251,13 @@ public class MediaFile implements Serializable {
 		obj_out.writeObject(this);
 		obj_out.close();
 		f_out.close();		
+	}
+	
+	/**
+	 * @return the File's Location
+	 */
+	public String getFileLocation(){
+		return "C:\\Music\\" + getArtistName().toLowerCase() + "\\" + getAlbumName().toLowerCase() + "\\";
 	}
 	
 	@Override
