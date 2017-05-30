@@ -339,8 +339,8 @@ public class ApplicationWindow extends Application{
 		
 		player.volumeProperty().bindBidirectional(volumeSlider.valueProperty());
 		
-		Image PlayButtonImage = new Image("play.png");
-		Image PauseButtonImage = new Image("pause.png");
+		Image PlayButtonImage = new Image("com/negativevr/media_library/res/play.png");
+		Image PauseButtonImage = new Image("com/negativevr/media_library/res/pause.png");
 		ImageView imageViewPlay = new ImageView(PlayButtonImage);
 		ImageView imageViewPause = new ImageView(PauseButtonImage);
 		
