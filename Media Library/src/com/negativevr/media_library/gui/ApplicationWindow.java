@@ -277,6 +277,7 @@ public class ApplicationWindow extends Application{
 	    
 	    //volume cotrol box
 	    fadeBox.getChildren().addAll(fadeIn, fadeOut);
+	    fadeBox.setAlignment(Pos.CENTER);
 	    volumeControls.getChildren().setAll(new Label("Volume"), volumeSlider, fadeBox);
 	    volumeControls.setAlignment(Pos.CENTER);
 
