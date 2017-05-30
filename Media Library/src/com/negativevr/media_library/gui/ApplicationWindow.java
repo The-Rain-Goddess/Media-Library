@@ -581,10 +581,15 @@ public class ApplicationWindow extends Application{
 					System.out.println("Playing: \n" + row.getItem());
 					File mediaFile = new File(row.getItem().getFilePath());
 					Media mediaToPlay = new Media(mediaFile.toURI().toString());
+					
+					artistLabel = new Label(row.getItem().getArtistName() + " - " +
+											row.getItem().getAlbumName());
+					songLabel = new Label(row.getItem().getSongName());
 					player.stop();
 					player = new MediaPlayer(mediaToPlay);
 					player.setAutoPlay(true);
 					updatePlayer();
+					
 				}
 			});
 			return row;
