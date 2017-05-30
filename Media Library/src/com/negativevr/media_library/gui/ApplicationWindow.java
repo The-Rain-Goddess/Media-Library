@@ -150,8 +150,8 @@ public class ApplicationWindow extends Application{
 		//player.setAutoPlay(true);
 		MediaView mediaView = new MediaView();
 		mediaView.setMediaPlayer(player);
-		Image PlayButtonImage = new Image("play.png");
-		Image PauseButtonImage = new Image("pause.png");
+		Image PlayButtonImage = new Image("com/negativevr/media_library/res/play.png");
+		Image PauseButtonImage = new Image("com/negativevr/media_library/res/pause.png");
 		ImageView imageViewPlay = new ImageView(PlayButtonImage);
 		ImageView imageViewPause = new ImageView(PauseButtonImage);
 		
@@ -177,19 +177,19 @@ public class ApplicationWindow extends Application{
 		});
 		
 		reload = new Button();
-		reload.setGraphic(new ImageView(new Image("reload.png")));
+		reload.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/reload.png")));
 		reload.setOnAction((ActionEvent e) -> {
 			player.seek(player.getStartTime());
 		});
 		
 		skip = new Button();
-		skip.setGraphic((new ImageView(new Image("skip.png"))));
+		skip.setGraphic((new ImageView(new Image("com/negativevr/media_library/res/skip.png"))));
 		
 		previous = new Button();
-		previous.setGraphic(new ImageView(new Image("previous.png")));
+		previous.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/previous.png")));
 		
 		next = new Button();
-		next.setGraphic(new ImageView(new Image("next.png")));
+		next.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/next.png")));
 		
 		timeSlider = new Slider();
 		HBox.setHgrow(timeSlider, Priority.ALWAYS);
@@ -475,7 +475,7 @@ public class ApplicationWindow extends Application{
 	    treeBox.setSpacing(10);
 	    
 	    //setup the root directory for file browser
-	    rootNode.setGraphic(new ImageView(new Image("remove.png")));
+	    rootNode.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/remove.png")));
 	    Iterable<Path> rootDirectories = getDirectories(rootPath);
 	    
 	    //populates the rootNode with Tree Items
@@ -720,7 +720,7 @@ public class ApplicationWindow extends Application{
 	
 	private MenuItem getMenuItem(String name, MenuAction action){
 		MenuItem item = new MenuItem(name,
-            new ImageView(new Image(name.toLowerCase()+".png")));
+            new ImageView(new Image("com/negativevr/media_library/res/" + name.toLowerCase()+".png")));
         item.setOnAction(new EventHandler<ActionEvent>() {
             @Override
 			public void handle(ActionEvent t) {
