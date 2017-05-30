@@ -41,12 +41,12 @@ public class FilePathTreeItem extends TreeItem<String> {
 		if (Files.isDirectory(file)) {
 			this.isDirectory = true;
 			this.setGraphic(new ImageView(folderCollapseImage));
-		} else if(this.fullPath.contains(".mp3")) {
-			this.isDirectory = false;
-			this.setGraphic(new ImageView(musicFileImage));
-		} else{
+		} else if(this.fullPath.contains(".data")) {
 			this.isDirectory = false;
 			this.setGraphic(new ImageView(fileImage));
+		} else{
+			this.isDirectory = false;
+			this.setGraphic(new ImageView(musicFileImage));
 		}
 
 		// set the value
