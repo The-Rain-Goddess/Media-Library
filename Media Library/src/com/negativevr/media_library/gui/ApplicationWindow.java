@@ -5,6 +5,10 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -73,7 +77,7 @@ import javafx.util.Duration;
 public class ApplicationWindow extends Application{
 
 	private final double WINDOW_MIN_WIDTH = 1200;
-	private final double WINDOW_MIN_HEIGHT = 600;
+	private final double WINDOW_MIN_HEIGHT = 800;
 	private TextField search;
 	private TableView<MediaFile> dataTable;
 	private MediaPlayer player;
@@ -82,6 +86,8 @@ public class ApplicationWindow extends Application{
 	private Label time, artistLabel, songLabel;
 	private Button fadeIn, fadeOut, play, reload, skip, next, previous;
 	
+	final Path rootPath = Paths.get("C:\\Music\\");
+    final TreeItem<String> rootNode = new TreeItem<>(rootPath.toAbsolutePath().toString());
 	private static final Duration FADE_DURATION = Duration.seconds(2.0);
 
 //constructor	
@@ -104,21 +110,19 @@ public class ApplicationWindow extends Application{
 		//set main window size
 		componentWindow.setMinHeight(WINDOW_MIN_HEIGHT);
 		componentWindow.setMinWidth(WINDOW_MIN_WIDTH);
-		     
-        //Create the scene and add the parent container to it
-        Scene scene = new Scene(componentWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT);
         
         //align dataTable
-        //tableDisplay.setTop(searchBox);
         tableDisplay.setRight(setupMediaDataTable());
         tableDisplay.setLeft(setupMediaFileBrowser());
         tableDisplay.setTop(setupMediaPlayer());;
         VBox.setMargin(tableDisplay, new Insets(10,10,10,10));
-        tableDisplay.setPrefSize(800,400);
         componentLayout.getChildren().addAll(setupMenuBar(), tableDisplay);
         
         //add componentLayout to Window
 		componentWindow.getChildren().addAll(componentLayout);
+		
+		//Create the scene and add the parent container to it
+        Scene scene = new Scene(componentWindow, WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT);
         
         //Add the Scene to the Stage
         rootStage.setScene(scene);
@@ -456,12 +460,13 @@ public class ApplicationWindow extends Application{
 //private File Browser mutators / accessors
 	private VBox setupMediaFileBrowser(){
 		VBox treeBox = new VBox();
+		treeBox.setMinHeight(650);
+		treeBox.setMaxHeight(650);
 	    treeBox.setPadding(new Insets(10,10,10,10));
 	    treeBox.setSpacing(10);
 	    
 	  //setup the file browser root
-	    Path rootPath = Paths.get("C:\\Music\\");
-	    final TreeItem<String> rootNode = new TreeItem<>(rootPath.toAbsolutePath().toString(),new ImageView(new Image("remove.png")));
+	    rootNode.setGraphic(new ImageView(new Image("remove.png")));
 	    //ClassLoader.getSystemResourceAsStream("com/computer.png")
 	    //Iterable<Path> rootDirectories = FileSystems.getDefault().getRootDirectories();
 	    Iterable<Path> rootDirectories = getDirectories(rootPath);
@@ -483,22 +488,53 @@ public class ApplicationWindow extends Application{
 	    
 	    //create the tree view
 	    TreeView<String> treeView = new TreeView<>(rootNode);
+	    treeView.setMinHeight(600);
+	    
 	    //add everything to the tree pane
-	    treeBox.getChildren().addAll(new Label("File browser"),treeView);
-	    VBox.setVgrow(treeView,Priority.ALWAYS);
+	    treeBox.getChildren().addAll(new Label("File browser"), treeView);
 	    
 	    return treeBox;
 	}
 	
-	private void updateFileSystem(final Path rootPath, final TreeItem<String> root){ 
-		root.getChildren().clear();
+	@SuppressWarnings("unused")
+	private void setupFileSystemWatcher(){
+		Path myDir = Paths.get("C:\\Music");       
+
+        try {
+           WatchService watcher = myDir.getFileSystem().newWatchService();
+           myDir.register(watcher, StandardWatchEventKinds.ENTRY_CREATE, 
+           StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+
+           WatchKey watckKey = watcher.take();
+
+           List<WatchEvent<?>> events = watckKey.pollEvents();
+           for (WatchEvent<?> event : events) {
+                if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
+                    System.out.println("Created: " + event.context().toString());
+                }
+                if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
+                    System.out.println("Delete: " + event.context().toString());
+                }
+                if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
+                    System.out.println("Modify: " + event.context().toString());
+                }
+            }
+           
+        } catch (Exception e) {
+            System.out.println("Error: " + e.toString());
+        }
+	}
+	
+	private void updateFileSystem(){ 
+		System.out.println("Updating File System...");
+		rootNode.getChildren().clear();
 		Iterable<Path> rootDirectories = getDirectories(rootPath);
 	    
 	    for(Path name : rootDirectories){
 	    	FilePathTreeItem treeNode = new FilePathTreeItem(name);
-	    	root.getChildren().add(treeNode);
-	    	//treeNode.setExpanded(true);
-	    } root.setExpanded(true);
+	    	rootNode.getChildren().add(treeNode);
+	    	treeNode.setExpanded(true);
+	    } rootNode.setExpanded(true);
 	}
 	
 	private List<Path> getDirectories(final Path dir) {
@@ -513,10 +549,13 @@ public class ApplicationWindow extends Application{
 	}
 	
 //private Data Table mutators / accessors
-	private TableView<MediaFile> setupMediaDataTable(){
+	private VBox setupMediaDataTable(){
+		VBox container = new VBox();
+		container.setMinHeight(650);
 		dataTable = new TableView<MediaFile>();
 		dataTable.setId("Data Table");
-		dataTable.setMinHeight(WINDOW_MIN_HEIGHT - 100);
+		dataTable.setMinHeight(650);
+		dataTable.setMaxHeight(650);
 		dataTable.setMinWidth(2*WINDOW_MIN_WIDTH/3);
 		BorderPane.setMargin(dataTable, new Insets(10,10,10,10));
 		
@@ -534,8 +573,10 @@ public class ApplicationWindow extends Application{
 		
 		// Show the Data
 		dataTable.setItems(sortedData);
-		
-		return dataTable;
+		container.setMaxHeight(WINDOW_MIN_HEIGHT - 200);
+		//VBox.setVgrow(dataTable, Priority.NEVER);
+		container.getChildren().addAll(dataTable);
+		return container;
 	}
 	
 	private void setDataTableClickEvents(){
@@ -649,6 +690,7 @@ public class ApplicationWindow extends Application{
         
         menuBar.setMinWidth(WINDOW_MIN_WIDTH);
         menuBar.getMenus().addAll(menuFile, menuEdit, menuView);
+        menuBar.autosize();
         return menuBar;
 	}
 	
@@ -801,6 +843,7 @@ public class ApplicationWindow extends Application{
                 		&& !songPath.textProperty().getValue().equals("")
                 		&& songPath.textProperty() != null){
                 	MediaFile newFile = new MediaFile();
+                	String number = (albumNumber.textProperty().getValue().equals("")) ? "0" : albumNumber.textProperty().getValue();
                 	try{
                 			newFile = new MediaFile(new MediaFileAttribute()
                 					.setAlbum(albumName.textProperty())
@@ -808,11 +851,12 @@ public class ApplicationWindow extends Application{
                 					.setArtists(artistNames.textProperty())
                 					.setGenre(genre.textProperty())
                 					.setDateCreated(new Date().toString())
-                					.setNumber(Integer.parseInt(albumNumber.textProperty().getValue().replace("", "0")))
+                					.setNumber(Integer.parseInt(number))
                 					.setPath(songPath.textProperty().getValue())
                 					.setPlays(0)
                 					.setLength(AudioFileIO.read(new File(songPath.textProperty().getValue())).getAudioHeader().getTrackLength()),
                 					Main.getNextUUID());
+                			
                 	} catch(IOException | NumberFormatException | CannotReadException | TagException | ReadOnlyFileException | InvalidAudioFrameException e){
                 		e.printStackTrace();
                 	}
@@ -821,12 +865,13 @@ public class ApplicationWindow extends Application{
                 	Main.getMasterData().put(newFile.getUUID(), newFile);
                 	try {
 						newFile.writeToDisk();
+						Files.copy(Paths.get(songPath.textProperty().getValue()), Paths.get(newFile.getFileLocation() + songName.textProperty().getValue() + ".mp3") );
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
                 	((Stage)((Button)t.getSource()).getScene().getWindow()).close();
                 	updateDataTable();
-                	updateFileSystem(Paths.get("C:\\Music\\"), new TreeItem<>(Paths.get("C:\\Music\\").toAbsolutePath().toString(), new ImageView(new Image("remove.png"))));
+                	updateFileSystem();
                 }
             }
         });
