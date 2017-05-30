@@ -465,26 +465,16 @@ public class ApplicationWindow extends Application{
 	    treeBox.setPadding(new Insets(10,10,10,10));
 	    treeBox.setSpacing(10);
 	    
-	  //setup the file browser root
+	    //setup the root directory for file browser
 	    rootNode.setGraphic(new ImageView(new Image("remove.png")));
-	    //ClassLoader.getSystemResourceAsStream("com/computer.png")
-	    //Iterable<Path> rootDirectories = FileSystems.getDefault().getRootDirectories();
 	    Iterable<Path> rootDirectories = getDirectories(rootPath);
 	    
+	    //populates the rootNode with Tree Items
 	    for(Path name : rootDirectories){
 	    	FilePathTreeItem treeNode = new FilePathTreeItem(name);
 	    	rootNode.getChildren().add(treeNode);
 	    	//treeNode.setExpanded(true);
 	    } rootNode.setExpanded(true);
-	    
-	    /*
-	    rootNode.addEventHandler(TreeItem.childrenModificationEvent(), new EventHandler<TreeItem.TreeModificationEvent<String>>(){
-			@Override
-			public void handle(TreeModificationEvent<String> e) {
-				//updateFileSystem(rootPath, rootNode);
-				//System.out.println("Waht");
-			}
-	    });*/
 	    
 	    //create the tree view
 	    TreeView<String> treeView = new TreeView<>(rootNode);
@@ -533,7 +523,7 @@ public class ApplicationWindow extends Application{
 	    for(Path name : rootDirectories){
 	    	FilePathTreeItem treeNode = new FilePathTreeItem(name);
 	    	rootNode.getChildren().add(treeNode);
-	    	treeNode.setExpanded(true);
+	    	//treeNode.setExpanded(true);
 	    } rootNode.setExpanded(true);
 	}
 	
