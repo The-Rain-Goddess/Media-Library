@@ -126,6 +126,7 @@ public class ApplicationWindow extends Application{
         
         //Add the Scene to the Stage
         rootStage.setScene(scene);
+        rootStage.getIcons().add(new Image(this.getClass().getResourceAsStream( "media_library.png" ))); 
         rootStage.show();
 	}
 	
