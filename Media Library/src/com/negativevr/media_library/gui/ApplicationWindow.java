@@ -582,9 +582,8 @@ public class ApplicationWindow extends Application{
 					File mediaFile = new File(row.getItem().getFilePath());
 					Media mediaToPlay = new Media(mediaFile.toURI().toString());
 					
-					artistLabel = new Label(row.getItem().getArtistName() + " - " +
-											row.getItem().getAlbumName());
-					songLabel = new Label(row.getItem().getSongName());
+					artistLabel.setText(row.getItem().getArtistName() + " - " + row.getItem().getAlbumName());
+					songLabel.setText(row.getItem().getSongName());
 					player.stop();
 					player = new MediaPlayer(mediaToPlay);
 					player.setAutoPlay(true);
