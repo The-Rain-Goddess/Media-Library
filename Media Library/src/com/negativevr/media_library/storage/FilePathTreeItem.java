@@ -70,7 +70,7 @@ public class FilePathTreeItem extends TreeItem<String> {
 					iv.setImage(folderExpandImage);
 				} try {
 					if (source.getChildren().isEmpty()) {
-						System.out.println(file.toAbsolutePath() + " isEmpty");
+						//System.out.println(file.toAbsolutePath() + " isEmpty");
 						Path path = Paths.get(source.getFullPath());
 						BasicFileAttributes attribs = Files.readAttributes(path, BasicFileAttributes.class);
 						if (attribs.isDirectory()) {
