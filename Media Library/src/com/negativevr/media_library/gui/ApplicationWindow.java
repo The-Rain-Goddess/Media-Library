@@ -143,7 +143,7 @@ public class ApplicationWindow extends Application{
 		HBox fadeBox = new HBox(5);
 		VBox volumeControls = new VBox(10);
 		if(Main.getMasterDataAsList().size()!=0){
-			Path path = Paths.get(Main.getMasterDataAsList().get(0).getFilePath());
+			Path path = Paths.get(Main.getMasterDataAsList().get(0).getLibraryFilePath());
 			Media media = new Media(path.toFile().toURI().toString());
 			player = new MediaPlayer(media);
 		} else{
@@ -223,7 +223,6 @@ public class ApplicationWindow extends Application{
 						player.seek(duration.multiply(timeSlider.getValue() / 100.0));
 					}
 					updateValues();
-	
 				}
 			}
 		});
@@ -307,7 +306,6 @@ public class ApplicationWindow extends Application{
 				} player.seek(new Duration(0));
 				player.play();
 			}
-			
 		});
 	    
 	    //volume cotrol box
