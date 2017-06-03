@@ -42,6 +42,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -56,6 +57,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -311,9 +313,11 @@ public class ApplicationWindow extends Application{
 			if(status==MediaStatus.REPEAT_NONE){
 				player.seek(new Duration(0));
 				player.pause();
+				play.setGraphic(imageViewPlay);
 			} else if(status == MediaStatus.REPEAT_SINGLE){
 				player.seek(new Duration(0));
 				player.play();
+				play.setGraphic(imageViewPause);
 			}
 		});
 	    
@@ -408,11 +412,12 @@ public class ApplicationWindow extends Application{
 			if(status==MediaStatus.REPEAT_NONE){
 				player.seek(new Duration(0));
 				player.pause();
+				play.setGraphic(imageViewPlay);
 			} else if(status == MediaStatus.REPEAT_SINGLE){
 				player.seek(new Duration(0));
 				player.play();
+				play.setGraphic(imageViewPause);
 			}
-			
 		});
 		
 		reload.setOnAction((ActionEvent e) -> {
@@ -602,22 +607,36 @@ public class ApplicationWindow extends Application{
 			TableRow<MediaFile> row = new TableRow<>();
 			row.setOnMouseClicked(event -> {
 				try{
-					if(event.getClickCount() == 1){
-						System.out.println("Clicked");
-						System.out.println(row.getItem());
-					} else if(event.getClickCount() == 2){
-						System.out.println("Playing: \n" + row.getItem());
-						File mediaFile = new File(row.getItem().getLibraryFilePath());
-						Media mediaToPlay = new Media(mediaFile.toURI().toString());
-						artistLabel.setText(row.getItem().getArtistName() + " - " + row.getItem().getAlbumName());
-						songLabel.setText(row.getItem().getSongName());
-						player.stop();
-						player = new MediaPlayer(mediaToPlay);
-						player.setAutoPlay(true);
-						updatePlayer();
+					if(event.getButton() == MouseButton.SECONDARY){
+						ContextMenu cMenu = new ContextMenu();
+						MenuItem remove = new MenuItem("Remove");
+						remove.setOnAction((ActionEvent ev) ->{
+							Main.getMasterData().remove(row.getItem().getUUID());
+							updateDataTable();
+		                	updateFileSystem();
+						});
 						
+						cMenu.getItems().add(remove);
+						row.setOnContextMenuRequested(e ->
+							cMenu.show(row, event.getScreenX(), event.getScreenY())
+						);
+						
+					} else{
+						if(event.getClickCount() == 1){
+							System.out.println("Clicked");
+							System.out.println(row.getItem());
+						} else if(event.getClickCount() == 2){
+							System.out.println("Playing: \n" + row.getItem());
+							File mediaFile = new File(row.getItem().getLibraryFilePath());
+							Media mediaToPlay = new Media(mediaFile.toURI().toString());
+							artistLabel.setText(row.getItem().getArtistName() + " - " + row.getItem().getAlbumName());
+							songLabel.setText(row.getItem().getSongName());
+							player.stop();
+							player = new MediaPlayer(mediaToPlay);
+							player.setAutoPlay(true);
+							updatePlayer();
+						}
 					}
-				
 				} catch(MediaException e){
 					Stage errorWindow = new Stage();
 					VBox componentLayout = new VBox();

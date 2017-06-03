@@ -66,7 +66,9 @@ public class FilePathTreeItem extends TreeItem<String> {
 				this.setValue(value);
 			}
 		}
-
+		/**
+		 * 
+		 */
 		this.addEventHandler(TreeItem.branchExpandedEvent(), new EventHandler<TreeItem.TreeModificationEvent<String>>() {
 			@Override
 			public void handle(TreeModificationEvent<String> e) {
@@ -87,7 +89,7 @@ public class FilePathTreeItem extends TreeItem<String> {
 							}
 						}
 					} else if(!source.getChildren().contains(this) && !isDirectory){
-						System.out.println(file.toAbsolutePath() +" isNotEmpty");
+						//System.out.println(file.toAbsolutePath() +" isNotEmpty");
 						
 					}
 				} catch (IOException x) {
