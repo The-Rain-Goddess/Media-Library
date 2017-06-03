@@ -14,6 +14,12 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+/**
+ * 
+ * @author Ryan May, Vaneh Boghosian
+ *
+ */
+
 public class FilePathTreeItem extends TreeItem<String> {
 	public static Image folderCollapseImage = new Image(ClassLoader.getSystemResourceAsStream("com/negativevr/media_library/res/folder.png"));
 	public static Image folderExpandImage = new Image(ClassLoader.getSystemResourceAsStream("com/negativevr/media_library/res/open folder.png"));
