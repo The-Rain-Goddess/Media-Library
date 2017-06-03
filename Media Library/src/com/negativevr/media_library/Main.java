@@ -120,54 +120,7 @@ public class Main {
 		return allSongs;
 	}
 
-	/*
-	 * public static List<File> displayDirectoryContents(File directory) { try {
-	 * File dir = new File("C:\\Music\\"); List<File> direct= new
-	 * ArrayList<File>(); direct.add(dir); File[] directoryListing =
-	 * dir.listFiles(); for (File file : directoryListing) { if
-	 * (file.isDirectory()) { System.out.println("directory:" +
-	 * dir.getCanonicalPath()); //displayDirectoryContents(dir); } else {
-	 * System.out.println("     file:" + dir.getCanonicalPath()); } return
-	 * direct; }
-	 * 
-	 * } catch (IOException e) { e.printStackTrace(); } return null; }
-	 */
-
-	/*
-	 * private static List<File> find() { File dir = new File("C:\\Music\\");
-	 * List<File> direct= new ArrayList<File>(); direct.add(dir); File[]
-	 * directoryListing = dir.listFiles(); if (directoryListing != null) { for
-	 * (File child : directoryListing) {
-	 * 
-	 * System.out.println("Directory: " + dir.getName()); } } return direct;
-	 * 
-	 * }
-	 */
-
-	/*
-	 * File file = new File("C:\\Music\\"); List<File> direct= new
-	 * ArrayList<File>(); direct.add(file);
-	 * 
-	 * for (File filesTest : direct) { if (filesTest.isDirectory()) {
-	 * System.out.println("Directory: " + filesTest.getName());
-	 * 
-	 * } else { System.out.println("File: " + filesTest.getName()); } } return
-	 * direct;
-	 * 
-	 * }
-	 */
-
-	/*
-	 * File[] files = null; if (file.exists()) { files = file.listFiles(new
-	 * FilenameFilter(){
-	 * 
-	 * @Override public boolean accept(File dir, String name) { return
-	 * name.toLowerCase().endsWith(".data"); } }); } System.out.println(file); }
-	 * return files; return null;
-	 * 
-	 * }
-	 */
-
+	
 	private static void createHomeDirectory() throws IOException {
 		File home = new File("C:\\Music\\");
 		if (!home.exists())
