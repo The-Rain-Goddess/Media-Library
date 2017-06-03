@@ -14,6 +14,12 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+/**
+ * 
+ * @author Ryan May, Vaneh Boghosian
+ *
+ */
+
 public class FilePathTreeItem extends TreeItem<String> {
 	public static Image folderCollapseImage = new Image(ClassLoader.getSystemResourceAsStream("com/negativevr/media_library/res/folder.png"));
 	public static Image folderExpandImage = new Image(ClassLoader.getSystemResourceAsStream("com/negativevr/media_library/res/open folder.png"));
@@ -60,7 +66,9 @@ public class FilePathTreeItem extends TreeItem<String> {
 				this.setValue(value);
 			}
 		}
-
+		/**
+		 * 
+		 */
 		this.addEventHandler(TreeItem.branchExpandedEvent(), new EventHandler<TreeItem.TreeModificationEvent<String>>() {
 			@Override
 			public void handle(TreeModificationEvent<String> e) {
@@ -70,7 +78,7 @@ public class FilePathTreeItem extends TreeItem<String> {
 					iv.setImage(folderExpandImage);
 				} try {
 					if (source.getChildren().isEmpty()) {
-						System.out.println(file.toAbsolutePath() + " isEmpty");
+						//System.out.println(file.toAbsolutePath() + " isEmpty");
 						Path path = Paths.get(source.getFullPath());
 						BasicFileAttributes attribs = Files.readAttributes(path, BasicFileAttributes.class);
 						if (attribs.isDirectory()) {
@@ -81,7 +89,7 @@ public class FilePathTreeItem extends TreeItem<String> {
 							}
 						}
 					} else if(!source.getChildren().contains(this) && !isDirectory){
-						System.out.println(file.toAbsolutePath() +" isNotEmpty");
+						//System.out.println(file.toAbsolutePath() +" isNotEmpty");
 						
 					}
 				} catch (IOException x) {

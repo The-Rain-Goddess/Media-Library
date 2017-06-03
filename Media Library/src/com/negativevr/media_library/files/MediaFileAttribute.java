@@ -9,6 +9,12 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
+/**
+ * 
+ * @author Ryan May, Vaneh Boghosian
+ *
+ */
+
 public class MediaFileAttribute {
 	private StringProperty name, album, dateCreated, dateRecorded, path, genre, artist;
 	//private List<StringProperty> artists;

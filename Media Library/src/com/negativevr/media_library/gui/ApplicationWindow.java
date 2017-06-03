@@ -6,10 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -46,6 +42,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Control;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
@@ -60,6 +57,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
@@ -75,6 +73,12 @@ import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+/**
+ * 
+ * @author Ryan May, Vaneh Boghosian
+ *
+ */
 
 public class ApplicationWindow extends Application{
 
@@ -143,11 +147,11 @@ public class ApplicationWindow extends Application{
 		HBox fadeBox = new HBox(5);
 		VBox volumeControls = new VBox(10);
 		if(Main.getMasterDataAsList().size()!=0){
-			Path path = Paths.get(Main.getMasterDataAsList().get(0).getFilePath());
+			Path path = Paths.get(Main.getMasterDataAsList().get(0).getLibraryFilePath());
 			Media media = new Media(path.toFile().toURI().toString());
 			player = new MediaPlayer(media);
 		} else{
-			player = new MediaPlayer(new Media(Paths.get("src/com/negativevr/media_library/res/init.mp3").toFile().toURI().toString()));
+			//player = new MediaPlayer(new Media(Paths.get("src/com/negativevr/media_library/res/init.mp3").toFile().toURI().toString()));
 		}
 		
 		//player.setAutoPlay(true);
@@ -187,6 +191,9 @@ public class ApplicationWindow extends Application{
 		
 		skip = new Button();
 		skip.setGraphic((new ImageView(new Image("com/negativevr/media_library/res/skip.png"))));
+		skip.setOnAction((ActionEvent e) -> {
+			player.seek(player.getStopTime());
+		});
 		
 		previous = new Button();
 		previous.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/previous.png")));
@@ -217,13 +224,11 @@ public class ApplicationWindow extends Application{
 			@Override
 			public void invalidated(Observable ov) {
 				if (timeSlider.isValueChanging()) {
-					// multiply duration by percentage calculated by slider position
-					Duration duration = player.getCurrentTime();
+					Duration duration = player.getMedia().getDuration();
 					if (duration != null) {
 						player.seek(duration.multiply(timeSlider.getValue() / 100.0));
 					}
 					updateValues();
-	
 				}
 			}
 		});
@@ -239,8 +244,16 @@ public class ApplicationWindow extends Application{
 			
 			songLabel = new Label();
 		}
-
+		
+		player.currentTimeProperty().addListener(new InvalidationListener(){
+			@Override
+			public void invalidated(Observable ov){
+				updateValues();
+			}
+		});
+		
 		player.currentTimeProperty().addListener(new ChangeListener<Duration>() {
+			
 			@Override
 			public void changed(ObservableValue<? extends Duration> arg0, Duration arg1, Duration arg2) {
 				updateValues();
@@ -283,6 +296,7 @@ public class ApplicationWindow extends Application{
 	        fadeInTimeline.play();
 	      }
 	    });
+	    
 	    fadeIn.setMaxWidth(Double.MAX_VALUE);
 	    
 	    //fade out button
@@ -299,15 +313,12 @@ public class ApplicationWindow extends Application{
 			if(status==MediaStatus.REPEAT_NONE){
 				player.seek(new Duration(0));
 				player.pause();
+				play.setGraphic(imageViewPlay);
 			} else if(status == MediaStatus.REPEAT_SINGLE){
-				try {
-					player.wait(1000L);
-				} catch (Exception e1) {
-					e1.printStackTrace();
-				} player.seek(new Duration(0));
+				player.seek(new Duration(0));
 				player.play();
+				play.setGraphic(imageViewPause);
 			}
-			
 		});
 	    
 	    //volume cotrol box
@@ -348,13 +359,12 @@ public class ApplicationWindow extends Application{
 			@Override
 			public void invalidated(Observable ov) {
 				if (timeSlider.isValueChanging()) {
-					// multiply duration by percentage calculated by slider position
-					Duration duration = player.getCurrentTime();
+					//Duration duration = player.getCurrentTime();
+					Duration duration = player.getMedia().getDuration();
 					if (duration != null) {
 						player.seek(duration.multiply(timeSlider.getValue() / 100.0));
 					}
 					updateValues();
-	
 				}
 			}
 		});
@@ -402,15 +412,20 @@ public class ApplicationWindow extends Application{
 			if(status==MediaStatus.REPEAT_NONE){
 				player.seek(new Duration(0));
 				player.pause();
+				play.setGraphic(imageViewPlay);
 			} else if(status == MediaStatus.REPEAT_SINGLE){
 				player.seek(new Duration(0));
 				player.play();
+				play.setGraphic(imageViewPause);
 			}
-			
 		});
 		
 		reload.setOnAction((ActionEvent e) -> {
 			player.seek(player.getStartTime());
+		});
+		
+		skip.setOnAction((ActionEvent e) -> {
+			player.seek(player.getStopTime());
 		});
 		
 		//fade in time line
@@ -533,35 +548,6 @@ public class ApplicationWindow extends Application{
 	    return treeBox;
 	}
 	
-	@SuppressWarnings("unused")
-	private void setupFileSystemWatcher(){
-		Path myDir = Paths.get("C:\\Music");       
-
-        try {
-           WatchService watcher = myDir.getFileSystem().newWatchService();
-           myDir.register(watcher, StandardWatchEventKinds.ENTRY_CREATE, 
-           StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
-
-           WatchKey watckKey = watcher.take();
-
-           List<WatchEvent<?>> events = watckKey.pollEvents();
-           for (WatchEvent<?> event : events) {
-                if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
-                    System.out.println("Created: " + event.context().toString());
-                }
-                if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
-                    System.out.println("Delete: " + event.context().toString());
-                }
-                if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
-                    System.out.println("Modify: " + event.context().toString());
-                }
-            }
-           
-        } catch (Exception e) {
-            System.out.println("Error: " + e.toString());
-        }
-	}
-	
 	private void updateFileSystem(){ 
 		System.out.println("Updating File System...");
 		rootNode.getChildren().clear();
@@ -593,7 +579,7 @@ public class ApplicationWindow extends Application{
 		dataTable.setId("Data Table");
 		dataTable.setMinHeight(650);
 		dataTable.setMaxHeight(650);
-		dataTable.setMinWidth(2*WINDOW_MIN_WIDTH/3);
+		dataTable.setMinWidth(2*WINDOW_MIN_WIDTH/3 + 100);
 		BorderPane.setMargin(dataTable, new Insets(10,10,10,10));
 		
 		//initialize the columns
@@ -621,22 +607,36 @@ public class ApplicationWindow extends Application{
 			TableRow<MediaFile> row = new TableRow<>();
 			row.setOnMouseClicked(event -> {
 				try{
-					if(event.getClickCount() == 1){
-						System.out.println("Clicked");
-						System.out.println(row.getItem());
-					} else if(event.getClickCount() == 2){
-						System.out.println("Playing: \n" + row.getItem());
-						File mediaFile = new File(row.getItem().getLibraryFilePath());
-						Media mediaToPlay = new Media(mediaFile.toURI().toString());
-						artistLabel.setText(row.getItem().getArtistName() + " - " + row.getItem().getAlbumName());
-						songLabel.setText(row.getItem().getSongName());
-						player.stop();
-						player = new MediaPlayer(mediaToPlay);
-						player.setAutoPlay(true);
-						updatePlayer();
+					if(event.getButton() == MouseButton.SECONDARY){
+						ContextMenu cMenu = new ContextMenu();
+						MenuItem remove = new MenuItem("Remove");
+						remove.setOnAction((ActionEvent ev) ->{
+							Main.getMasterData().remove(row.getItem().getUUID());
+							updateDataTable();
+		                	updateFileSystem();
+						});
 						
+						cMenu.getItems().add(remove);
+						row.setOnContextMenuRequested(e ->
+							cMenu.show(row, event.getScreenX(), event.getScreenY())
+						);
+						
+					} else{
+						if(event.getClickCount() == 1){
+							System.out.println("Clicked");
+							System.out.println(row.getItem());
+						} else if(event.getClickCount() == 2){
+							System.out.println("Playing: \n" + row.getItem());
+							File mediaFile = new File(row.getItem().getLibraryFilePath());
+							Media mediaToPlay = new Media(mediaFile.toURI().toString());
+							artistLabel.setText(row.getItem().getArtistName() + " - " + row.getItem().getAlbumName());
+							songLabel.setText(row.getItem().getSongName());
+							player.stop();
+							player = new MediaPlayer(mediaToPlay);
+							player.setAutoPlay(true);
+							updatePlayer();
+						}
 					}
-				
 				} catch(MediaException e){
 					Stage errorWindow = new Stage();
 					VBox componentLayout = new VBox();

@@ -86,7 +86,7 @@ public class Main {
 
 	private static void readFromFile() throws IOException, ClassNotFoundException {
 		List<File> files = getFilesFromMainDirectory();
-		if(files!=null){
+		if(files!=null){	
 			for (File file : files) {
 				ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file));
 				MediaFile media = (MediaFile) ois.readObject();
@@ -120,7 +120,6 @@ public class Main {
 		return allSongs;
 	}
 
-	
 	private static void createHomeDirectory() throws IOException {
 		File home = new File("C:\\Music\\");
 		if (!home.exists())
