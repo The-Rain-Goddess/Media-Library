@@ -151,7 +151,7 @@ public class ApplicationWindow extends Application{
 			Media media = new Media(path.toFile().toURI().toString());
 			player = new MediaPlayer(media);
 		} else{
-			//player = new MediaPlayer(new Media(Paths.get("src/com/negativevr/media_library/res/init.mp3").toFile().toURI().toString()));
+			player = new MediaPlayer(new Media(Paths.get("C:\\Music\\init.mp3").toFile().toURI().toString()));
 		}
 		
 		//player.setAutoPlay(true);
