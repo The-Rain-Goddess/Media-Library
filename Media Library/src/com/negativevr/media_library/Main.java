@@ -117,7 +117,7 @@ public class Main {
 				}
 			}
 		} System.out.println("Files to be read into ram : \n" + allSongs); 
-		return allSongs;
+		return allSongs; 
 	}
 
 	private static void createHomeDirectory() throws IOException {
