@@ -202,15 +202,21 @@ public class ApplicationWindow extends Application{
 		next.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/next.png")));
 		
 		Button repeat = new Button();
-		if(status == MediaStatus.REPEAT_NONE)
+		if(status == MediaStatus.REPEAT_NONE){
 			repeat.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/repeat_none.png")));
-		else if(status == MediaStatus.REPEAT_SINGLE)
+		} else if(status == MediaStatus.REPEAT_SINGLE)
 			repeat.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/repeat_single.png")));
+		else if(status == MediaStatus.REPEAT_MULTI)
+			repeat.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/repeat_playlist.png")));
+		
 		repeat.setOnAction((ActionEvent e) ->{
 			if(status == MediaStatus.REPEAT_SINGLE){
 				status = MediaStatus.REPEAT_NONE;
 				repeat.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/repeat_none.png")));
 			} else if(status == MediaStatus.REPEAT_NONE){
+				status = MediaStatus.REPEAT_MULTI;
+				repeat.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/repeat_playlist.png")));
+			} else if(status == MediaStatus.REPEAT_MULTI){
 				status = MediaStatus.REPEAT_SINGLE;
 				repeat.setGraphic(new ImageView(new Image("com/negativevr/media_library/res/repeat_single.png")));
 			}
@@ -354,6 +360,9 @@ public class ApplicationWindow extends Application{
 		return mediaSlot;
 	}
 	
+	/**
+	 * updates the media player object to account for new media being loaded
+	 */
 	private void updatePlayer(){
 		timeSlider.valueProperty().addListener(new InvalidationListener() {
 			@Override
@@ -417,6 +426,26 @@ public class ApplicationWindow extends Application{
 				player.seek(new Duration(0));
 				player.play();
 				play.setGraphic(imageViewPause);
+			} else if(status == MediaStatus.REPEAT_MULTI){
+				SortedList<MediaFile> list = getSortedData();
+				Media nextSong = null;
+				for(int i = 0; i<list.size(); i++){
+					if(i!=list.size()-1 && player.getMedia().getSource().toString().contains(new File(list.get(i).getLibraryFilePath()).toURI().toString())){
+						nextSong = new Media(new File(list.get(i+1).getLibraryFilePath()).toURI().toString());
+						artistLabel.setText(list.get(i+1).getArtistName() + " - " + list.get(i+1).getAlbumName());
+						songLabel.setText(list.get(i+1).getSongName());
+					} else if(i == list.size()-1 && player.getMedia().getSource().toString().contains(new File(list.get(i).getLibraryFilePath()).toURI().toString())){ 
+						nextSong = new Media(new File(list.get(0).getLibraryFilePath()).toURI().toString());
+						artistLabel.setText(list.get(0).getArtistName() + " - " + list.get(0).getAlbumName());
+						songLabel.setText(list.get(0).getSongName());
+					}
+				}
+				if(nextSong!=null){
+					player = new MediaPlayer( nextSong );
+					player.setAutoPlay(true);
+					updatePlayer();
+					player.play();
+				}
 			}
 		});
 		
