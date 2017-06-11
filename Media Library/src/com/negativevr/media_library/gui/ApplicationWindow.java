@@ -13,10 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.jaudiotagger.audio.AudioFileIO;
-import org.jaudiotagger.audio.exceptions.CannotReadException;
-import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException;
-import org.jaudiotagger.audio.exceptions.ReadOnlyFileException;
-import org.jaudiotagger.tag.TagException;
 
 import com.negativevr.media_library.Main;
 import com.negativevr.media_library.files.MediaFile;
@@ -936,7 +932,7 @@ public class ApplicationWindow extends Application{
         					.setPlays(0);
                 	try{		
                 		mfa.setLength(AudioFileIO.read(new File(songPath.textProperty().getValue())).getAudioHeader().getTrackLength());        			
-                	} catch(IOException | NumberFormatException | CannotReadException | TagException | ReadOnlyFileException | InvalidAudioFrameException e){
+                	} catch(Exception e){
                 		e.printStackTrace();
                 		mfa.setLength(Double.NaN);
                 	} newFile = new MediaFile(mfa, Main.getNextUUID());
