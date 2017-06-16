@@ -124,5 +124,7 @@ public class Main {
 		File home = new File("C:\\Music\\");
 		if (!home.exists())
 			home.mkdirs();
+		File file = new File("C:\\Music\\init.mp3");
+		file.createNewFile();
 	}
 }
