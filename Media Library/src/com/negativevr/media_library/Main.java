@@ -117,7 +117,7 @@ public class Main {
 				}
 			}
 		} System.out.println("Files to be read into ram : \n" + allSongs); 
-		return allSongs;
+		return allSongs; 
 	}
 
 	private static void createHomeDirectory() throws IOException {
@@ -125,6 +125,9 @@ public class Main {
 		if (!home.exists())
 			home.mkdirs();
 		File file = new File("C:\\Music\\init.mp3");
-		file.createNewFile();
+		if(!file.exists())
+			file.createNewFile();
+		else if(file.exists())
+			file.delete();
 	}
 }
