@@ -21,8 +21,7 @@ import com.negativevr.media_library.gui.ApplicationWindow;
  */
 
 public class Main {
-	private static final Map<Long, MediaFile> masterMediaData = Collections
-			.synchronizedMap(new TreeMap<Long, MediaFile>());
+	private static final Map<Long, MediaFile> masterMediaData = Collections.synchronizedMap(new TreeMap<Long, MediaFile>());
 	private static long UUID = 0;
 
 	public Main() {
